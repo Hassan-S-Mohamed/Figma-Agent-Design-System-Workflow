@@ -1,6 +1,6 @@
 ---
 name: ds-build
-description: Deep mutating build of one foundation component for one platform in the active Figma design-system file. Consumes an approved CC-* contract plus Plan Package A–E — especially Table C (Variables/Styles solves) and Table D (nested configs) — then constructs Auto Layout, semantic bindings, Text Styles, theme modes, Language (EN + automatic AR stress copy), and Direction (LTR/RTL) as separate concerns. Use only after /ds-plan is human-approved Ready to Build.
+description: Deep mutating build of one foundation component for one platform in the active Figma design-system file. Consumes an approved CC-* contract plus Plan Package A–E — especially Table C (Variables/Styles solves) and Table D (nested configs) — then constructs Auto Layout, a readable non-overlapping variant-set grid, semantic bindings, Text Styles, theme modes, Language (EN + automatic AR stress copy), and Direction (LTR/RTL) as separate concerns. Use only after /ds-plan is human-approved Ready to Build.
 ---
 
 # Design System Build
@@ -93,6 +93,7 @@ A shallow build is a failed build. Do **not**:
 - Flatten nested dependencies that Table D requires as instances
 - Detach instances to restyle
 - Mark Ready for Test while overlap, clipping, raw fills, or failed Language / Direction / theme self-check remain
+- Mark Ready for Test while variants overlap in the **component set view**, or the grid is unordered so a reader cannot tell which property changes from cell to cell
 - Mark Ready for Test when a contracted text role has EN but no automatic AR stress copy
 - Mark Ready for Test when required contrast pairs pass WCAG but fail APCA (or the reverse) without logging and resolving
 - Copy failing colors from a component-set example instead of following a passing shade/tint step
@@ -438,7 +439,7 @@ Hard stop: not Ready for Test while required nested components were rebuilt as l
 9. Direction: direction-neutral Auto Layout + logical Leading/Trailing/Start/End  
 10. `Direction=LTR/RTL` only at the smallest necessary nested layer, and only if the contract allows  
 11. Preserve published public APIs on updates; breaking changes need migration approval  
-12. No overlap/clipping unless intentional (badge overlay, focus ring, etc.)  
+12. No overlap/clipping unless intentional (badge overlay, focus ring, etc.). This applies **inside** a variant and **between** variants in the set view (see **Variant set canvas layout**)  
 13. Long EN/AR content grows, wraps, or truncates per contract — never crush typography to fit  
 14. Report what was inspected, changed, and unverified  
 15. Do not “improve” the approved plan during build — re-plan first if wrong  
@@ -475,6 +476,62 @@ Do **not** build: `Type × Size × State × Theme × Language × Direction × Ic
 | `boolean prop` | Boolean property | Drives visibility of optional anatomy from wireframe A |
 | `instance swap` | Instance-swap property | Preferred values = Table D targets |
 | `other` | Only if Table B specifies | Do not invent |
+
+---
+
+## Variant set canvas layout (mandatory)
+
+The purple component-set frame is a reading surface. Variants must sit in a clear grid. They must not stack on top of each other.
+
+Figma’s default “combine as variants” placement often drops every variant on the same spot, or uses a cell size that is smaller than the largest variant. **Do not trust that default.** After the variant matrix exists, measure each variant and place it yourself.
+
+Do this at the end of Phase 4, and again at the end of Phase 6 if Language or Direction stress changed any size.
+
+### Reading order
+
+Use Table B / section 4 value order. Do not sort alphabetically when that scrambles meaning (`sm` before `md` before `lg`, not `lg` then `md` then `sm`).
+
+| Grid role | Which axis | Direction |
+|---|---|---|
+| Groups, top to bottom | First variant axis in Table B (usually Type or Hierarchy) | Contract value order |
+| Columns, left to right | Next axis (usually Size) | Contract value order, small → large |
+| Rows, top to bottom | Next axis (usually State) | Interaction order below |
+
+**State row order** (only values that exist on this component): `default`, `hover`, `focus`, `pressed`, `selected`, `disabled`, `error`, `loading`.
+
+| How many variant axes | Layout |
+|---|---|
+| 1 | One row, left to right |
+| 2 | Columns + rows. No extra groups |
+| 3 or more | Groups for the first axis, then columns and rows inside each group |
+
+Each step across a row, or down a column, should change **one** property. A reader should name that property without opening the properties panel.
+
+Set the component-set **property order** to this same axis order so the properties panel and the canvas tell the same story.
+
+### Placement rules
+
+1. Measure every variant’s width and height, including strokes, focus rings, and shadows that draw outside the frame.
+2. Column width = the widest variant in that column. Row height = the tallest variant in that row.
+3. Gap between variant frames ≥ **40px**, and larger than any outer effect so a focus ring or shadow does not cover the neighbor.
+4. Gap between groups ≥ **64px**.
+5. Place each variant at the **top-left** of its cell. Do not center a short variant in a way that a taller neighbor covers the row above or below.
+6. Pad the set frame by ≥ **24px** so the first and last variants are not clipped by the purple frame.
+7. Do not use absolute position inside a variant to fake this grid.
+8. Do not shrink type, padding, or target size to squeeze the grid.
+9. After any size change, reflow the whole set.
+10. Overlap left in the set view blocks Ready for Test.
+
+### Set-view check
+
+Walk left to right, then top to bottom. Confirm:
+
+- No two variant bounding boxes intersect
+- No outer effect covers the next variant
+- Same-size siblings in one row share the same height and alignment
+- Property order in the panel matches the grid
+
+Record the result in **Variant set layout** in the build report.
 
 ---
 
@@ -519,6 +576,7 @@ Follow this order unless the contract forbids it. Do not bind tokens before the 
 2. Build variant matrix for type/size/state only as contracted  
 3. Wire booleans/text/instance-swaps to anatomy  
 4. Exclude invalid combinations explicitly  
+5. **Reflow the set view** using **Variant set canvas layout** — do not leave the default stacked placement  
 
 ### Phase 5 — Bind foundations
 
@@ -546,6 +604,7 @@ Language ≠ Direction. Run both sub-phases; do not merge evidence into one “R
 3. Handle mixed-direction exceptions without reversing characters  
 4. Mirror directional icons only  
 5. Record Direction Implementation + icon/mixed-direction decisions  
+6. If any variant grew or shrank, **reflow the set view** again so neighbors still do not overlap  
 
 Primary stress pairing remains EN+LTR and AR+RTL, but report Language and Direction as separate tables.
 ### Phase 7 — Accessibility design implementation
@@ -698,13 +757,15 @@ See **Appendix A** for icon mirror lists, mixed-direction rules, and the automat
 
 1. Auto Layout on every logical container  
 2. Consistent padding, gap, alignment across matching variants/states  
-3. No accidental overlap or clipping  
-4. No absolute positioning to hide layout mistakes  
-5. Intentional Hug / Fill / Fixed only  
-6. Recheck after LTR and RTL **Direction**, and after EN and AR **Language** stress  
-7. Long content per §5 does not crush type or overflow clipped without contract rule  
+3. No accidental overlap or clipping **inside** a variant  
+4. No accidental overlap **between** variants in the set view (see **Variant set canvas layout**)  
+5. No absolute positioning to hide layout mistakes  
+6. Intentional Hug / Fill / Fixed only  
+7. Recheck after LTR and RTL **Direction**, and after EN and AR **Language** stress  
+8. Long content per §5 does not crush type or overflow clipped without contract rule  
+9. After size changes, the set grid is reflowed; bounding boxes still do not intersect  
 
-Hard stop: not Ready for Test while overlap, clipping, or inconsistent sizing remains.
+Hard stop: not Ready for Test while overlap, clipping, inconsistent sizing, or an unreadable set grid remains.
 
 ---
 
@@ -731,7 +792,8 @@ Language and Direction are separate columns of evidence. Primary stress uses EN+
 | Contrast APCA additional confirmation (same pairs) | Pass | Measured \|Lc\| + polarity |
 | Component-set example shade/tint follow-up (if example given) | Pass | Same ramp / passing step used |
 | Public API matches Table B | Pass | Property list |
-| No overlap / clip / unstable sizing | Pass | Visual/layout check |
+| No overlap / clip / unstable sizing | Pass | Visual/layout check inside each variant |
+| Set view is readable and not overlapping | Pass | Grid role + gap; bounding boxes do not intersect |
 | No EN/AR duplicate sets | Pass | File search |
 | No Language≡Direction property mashup | Pass | Public API inspection |
 
@@ -765,6 +827,7 @@ Report **Ready for Test** only when:
 - Critical contrast pairs confirmed with **WCAG 2.2 AA and APCA**; conflicts resolved or explicitly Blocked  
 - If a component-set example was supplied: shade/tint follow-up applied (passing ramp step; no failing raw copy)  
 - **Built Configuration Snapshot** and **Controls as Built** are filled (at-a-glance; other sections still present)  
+- **Variant set layout** is filled; set-view bounding boxes do not overlap; axis order matches Table B  
 - Change log complete  
 
 Otherwise readiness is `Draft` or `Blocked`.
@@ -885,6 +948,13 @@ If Table D was `None`, write one row: `None — no nested deps`.
 
 | Object | Type | Purpose |
 |---|---|---|
+
+### Variant set layout
+
+| Axis | Grid role (group / column / row) | Value order on canvas | Gap used | Overlap? |
+|---|---|---|---|---|
+
+One row per variant axis. If there is no variant axis, write `None — single component, no set grid`.
 
 ### Property API (as built)
 
@@ -1083,6 +1153,14 @@ Also approve foundation proposals FP-001.
 | Label AR | `Text/AR/Label/Medium` | Desktop | Verified | §10 |
 | Padding / gap / radius | `spacing-md`, `spacing-sm`, `radius-md` | single | Verified | §10 |
 
+### Variant set layout (excerpt)
+
+| Axis | Grid role | Value order on canvas | Gap used | Overlap? |
+|---|---|---|---|---|
+| Hierarchy | Groups, top to bottom | primary → secondary → tertiary → destructive | 64px between groups | No |
+| Size | Columns, left to right | sm → md → lg | 40px | No |
+| State | Rows, top to bottom | default → hover → focus → pressed → disabled | 40px | No |
+
 ### Property API (as built)
 
 | Property | Type | Values / default | Purpose | Matches Table B? |
@@ -1151,6 +1229,7 @@ Also approve foundation proposals FP-001.
 | WCAG + APCA contrast | Pass | See contrast table — Pass both |
 | Table D integrity | Pass | `Icon / Web` still instance |
 | Table B API | Pass | properties match plan |
+| Set view layout | Pass | Hierarchy groups, Size columns, State rows; 40px gap; no overlap |
 
 ### Change Log (excerpt)
 
@@ -1180,9 +1259,10 @@ Also approve foundation proposals FP-001.
 1. Keep the same section order in every real build report.  
 2. Always fill **Built Configuration Snapshot** + **Controls as Built** right after Build Summary (at-a-glance; do not skip).  
 3. Always fill Plan Package Intake + Table C/D Execution Logs (or explicit `None`).  
-4. Swap sample names for **live** names from the file and the approved plan.  
-5. If a cell has no proof, write `Unverified` / `Unknown` — do not guess.  
-6. End with **one** next command only.  
+4. Always fill **Variant set layout** (axis, grid role, value order, gap, overlap).  
+5. Swap sample names for **live** names from the file and the approved plan.  
+6. If a cell has no proof, write `Unverified` / `Unknown` — do not guess.  
+7. End with **one** next command only.  
 
 ---
 

@@ -126,6 +126,8 @@ Record purpose, anatomy, properties, states, dependencies, themes, **Language**,
 
 Check naming, variant axes/values, duplicate or missing combinations, property linkage, nested instance integrity, detached instances, hidden layers without properties, unnecessary groups, absolute positioning, Auto Layout nesting, layer naming, stable dimensions, and resizing.
 
+**Set view:** variants inside the component set must not overlap. The grid must be readable: one property changes per row or column, in contract value order (not a random stack). Fail as **Major** when bounding boxes intersect, an outer effect covers the next variant, or a reader cannot tell which property a row or column changes.
+
 Flag variant explosion from Theme, Language, individual icons, icon position, width, or platform without structural need.
 
 Also check contract drift: public API, states, dependencies, responsive/platform/**Language**/**Direction** behavior vs `CC-*`.
@@ -184,7 +186,7 @@ Platform focus:
 - **Web:** Desktop / Tablet / Mobile viewports; keyboard focus styling must remain
 - **Tablet / Mobile:** touch targets, pressed feedback, app layout conventions
 
-Fail on overlap, unexpected clipping, unstable height/width, inconsistent Auto Layout across matching variants, or absolute positioning used to hide layout defects.
+Fail on overlap, unexpected clipping, unstable height/width, inconsistent Auto Layout across matching variants, overlapping variants in the set view, or absolute positioning used to hide layout defects.
 
 ### 7. State-coverage test
 
@@ -234,7 +236,14 @@ Do not treat “Arabic” as proof of RTL or “English” as proof of LTR — v
 
 ### 10. Documentation test
 
-Check component docs sections: Overview, Styles & Variables (scoped + contextual), Anatomy, Variants, Behavior & interaction, Detail specs, Usage (Use for / Don’t use for), Composition, Edge cases, Status—plus platform example, **Language** (EN + AR) and **Direction** (LTR + RTL) / Light + Dark coverage, readiness label, and `CC-*` traceability. No overlapping restatements across sections. Foundations must be linked, not redefined. Gaps that block safe handoff → recommend `/ds-document`.
+Check component docs sections: Overview, Styles & Variables (scoped + contextual), Anatomy, Variants, Behavior & interaction, Detail specs, Usage (Use for / Don’t use for), Composition, Edge cases, Status—plus platform example, **Language** (EN + AR) and **Direction** (LTR + RTL) / Light + Dark coverage, readiness label, and `CC-*` traceability. No overlapping restatements across sections. Foundations must be linked, not redefined.
+
+Also check:
+
+- A documentation **template** is named (existing page/frame, or a style the user described). Guessed layout with no template → gap for `/ds-document`
+- **Every public property** has a plain-language capability (what it can do, every value, default, what it cannot do) and a live example: variant values pointed at in Variants; boolean off/on; text default + long; instance-swap default and allowed swaps. A property with no example → gap for `/ds-document`
+
+Gaps that block safe handoff → recommend `/ds-document`.
 
 ## Pass gates
 
@@ -253,7 +262,8 @@ The component passes only when:
 - Every production text node uses the exact approved Text Style for role, language, and platform mode
 - Typography variables verified inside assigned Text Styles
 - No unintended local typography overrides
-- Auto Layout resizing is stable; no unintended overlap or unexpected clipping
+- Auto Layout resizing is stable; no unintended overlap or unexpected clipping inside a variant
+- Variants in the set view do not overlap; the grid is readable (one property per row or column, contract value order)
 - Matching variants use consistent Auto Layout sizing/padding/gaps
 - Focus and disabled behavior are clear at design level
 - Critical contrast pairs pass **WCAG 2.2 AA and APCA additional confirmation** (or are explicitly N/A per contract)

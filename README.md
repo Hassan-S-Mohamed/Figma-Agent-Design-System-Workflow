@@ -13,10 +13,10 @@ A full end-to-end skill suite for one component × one platform at a time:
 | **Review** | `ds-review.md` | Read-only foundations coverage + Plan Handoff Package |
 | **Foundation architecture** | `ds-foundation-architecture-review.md` | Deep Variables/Styles architecture health check |
 | **Plan** | `ds-plan.md` | `CC-*` Component Contract + Plan Package extras A–E |
-| **Build** | `ds-build.md` | Mutating build from an approved plan (executes Tables C–D) |
+| **Build** | `ds-build.md` | Mutating build from an approved plan (executes Tables C–D). Lays variants in a readable grid so they do not overlap in the set view |
 | **Test** | `ds-test.md` | Read-only QA (structure, tokens, a11y, Language, Direction) |
 | **Fix** | `ds-fix.md` | Safe repairs for Critical/Major findings |
-| **Document** | `ds-document.md` | In-file component docs (docs-only; no API changes) |
+| **Document** | `ds-document.md` | In-file component docs (docs-only; no API changes). Asks which doc style to use as the template, then defines every property capability with examples |
 
 ## Default workflow
 

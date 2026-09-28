@@ -170,7 +170,7 @@ Hard stop when:
 - Required production layers remain unbound
 - Nested reuse gate fails (including unmet **Table D** Required rows)
 - Variables/Styles compliance gate fails (including unexecuted blocking **Table C** rows)
-- Unintended overlap, clipping, or unstable Auto Layout remains
+- Unintended overlap, clipping, or unstable Auto Layout remains (inside a variant, or between variants in the set view)
 - Plan is not human-approved before Build
 - Required `FP-*` / Table C Gap IDs are unapproved
 - Plan Package extras C–D are missing (and not explicitly `None`)
@@ -187,8 +187,9 @@ Hard stop when:
 6. After each mutating phase, summarize what changed — for Build, include Table C / Table D execution results.
 7. If Test finds no Critical/Major issues, skip Fix and say why.
 8. Do not Document as production-ready while Test fails, unless the user asks for draft docs.
-9. At full-workflow kickoff, offer `/ds-jira` (parent + subtasks) unless the user skips board setup.
-10. `/ds-jira` is draft-only — never create Jira issues via API from the orchestrator. Output must be easy plain text with Action + component titles.
+9. Do not start `/ds-document` page layout until the user names the documentation style to use as the template (existing page/frame, or a short style description).
+10. At full-workflow kickoff, offer `/ds-jira` (parent + subtasks) unless the user skips board setup.
+11. `/ds-jira` is draft-only — never create Jira issues via API from the orchestrator. Output must be easy plain text with Action + component titles.
 
 ## Planning and approval rules
 

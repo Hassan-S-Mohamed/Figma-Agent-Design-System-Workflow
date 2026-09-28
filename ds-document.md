@@ -1,6 +1,6 @@
 ---
 name: ds-document
-description: Creates or updates in-file Figma documentation for one foundation component on one platform—consumer sections Overview through Edge cases, with scoped Styles & Variables and contextual examples. Docs-only; never changes source component API. Foundations docs are separate from component docs. Use after /ds-test passes or when documenting an approved component.
+description: Creates or updates in-file Figma documentation for one foundation component on one platform—consumer sections Overview through Edge cases, with scoped Styles & Variables and contextual examples. Asks which documentation style to use as the template before writing. Defines every public property capability and shows a live example. Docs-only; never changes source component API. Foundations docs are separate from component docs. Use after /ds-test passes or when documenting an approved component.
 ---
 
 # Design System Document
@@ -192,6 +192,45 @@ Expect, then verify in file (for **binding references** on the component page—
 | Grid & Layout | Platform modes |
 | Shadows | Verify full effect geometry in file |
 
+## Documentation template — ask first
+
+Do **not** invent a documentation look. Before creating or restyling a docs page, the human must name the **style to use as the template**.
+
+### Already named in this request
+
+If the prompt already points to a template, use it and say which one. Do not ask again.
+
+Accepted answers:
+
+- An existing docs page or frame in this file (match its layout, headings, type, spacing, and example style)
+- A short description of the style they want (for example: compact spec, visual gallery, or “same as Button docs”)
+
+### Not named yet
+
+Stop. Do not mutate docs. Ask in easy words:
+
+```text
+Which documentation style should I use as the template?
+
+Please tell me one of these:
+- The name of an existing docs page or frame in this file to copy
+- Or a short description of the style you want (layout, how much detail, how examples should look)
+
+I will follow that template. I will not start the page until you choose.
+```
+
+### After they answer
+
+1. Inspect the named page or apply the described style
+2. Record it in the report as **Template**
+3. Keep the required section **content** (Overview through Status, property capabilities, examples)
+4. Let the template control **layout, type, spacing, and visual tone**
+5. If the template has no slot for a required fact, add the smallest block that fits the same style — do not switch to a different style
+
+Required coverage does not change with the template. A compact template still defines every property and still shows examples. It may use smaller cards, not fewer properties.
+
+---
+
 ## Documentation principles
 
 1. Live source instances only—no detach, no visual replicas as truth  
@@ -215,7 +254,7 @@ Expect, then verify in file (for **binding references** on the component page—
 | Parts of one instance | Anatomy |
 | Selectable options / structural matrix | Variants |
 | Hover, focus, pressed, disabled, loading, Language behavior, Direction/RTL behavior, a11y behavior | Behavior & interaction |
-| Property API, defaults, sizing, nested deps | Detail specs |
+| Property API, what each property can do, defaults, sizing, nested deps | Detail specs |
 | Use for / Don’t use for + alternatives | Usage |
 | Layout with neighboring components | Composition |
 | Rare / failure / overflow / long text | Edge cases |
@@ -238,7 +277,7 @@ Create or update these sections **in order**. Names may match file convention; c
 3. **Anatomy** — numbered callouts on a live instance + part table (required/optional).  
 4. **Variants** — complete matrix per `CC-*` (every contracted value ≥ once); restricted combos labeled.  
 5. **Behavior & interaction** — state meaning, pointer/keyboard, focus, loading/disabled rules, **Language** (EN vs AR Text Styles + stress examples) vs **Direction** (LTR vs RTL layout) as separate notes, design-time a11y (contrast **WCAG 2.2 AA + APCA**, targets); runtime marked `Implementation requirement`.  
-6. **Detail specs** — exact property names, defaults, safe combinations, Hug/Fill, targets, nested dependencies.  
+6. **Detail specs** — exact property names, defaults, safe combinations, Hug/Fill, targets, nested dependencies, and **property capabilities with examples** (see below).  
 7. **Usage** — **Use for** / **Don’t use for** + preferred alternatives.  
 8. **Composition** — product-like layouts with siblings (form row, toolbar, dialog footer); spacing between components; or `Usage evidence pending`.  
 9. **Edge cases** — long/mixed text, empty/error/overflow, platform quirks, known defects → `/ds-fix`.  
@@ -284,6 +323,44 @@ Build from the **`CC-*` variant and state model** plus verified source support.
 
 **Gate:** if any contracted variant value is undocumented → incomplete.
 
+### Property capabilities and examples (required)
+
+Consumers must see **what each property can do**, not only a name in a table.
+
+Own this in **Detail specs**. **Variants** keeps the structural picture. Do not paste a second full cross-product grid here.
+
+For **every** public property on the source (variant axis, text, boolean, instance swap):
+
+| Field | What to write |
+|---|---|
+| Property | Exact Figma name |
+| Kind | `variant axis`, `text prop`, `boolean prop`, `instance swap`, or `other` |
+| What it can do | One or two easy sentences. What changes when the consumer sets it |
+| Every value | Full list. Mark the default |
+| When it applies | Which variants or states allow it |
+| What it cannot do | Restricted combinations, or `None` |
+| Example | Live source instance, captioned with property + value |
+
+Example rules:
+
+| Kind | What to show |
+|---|---|
+| Variant axis | Do **not** rebuild the matrix. Point to the live example already in **Variants**, and add a one-line caption of what that value changes. Every contracted value needs that caption |
+| Boolean | Two live instances: off and on |
+| Text | Default text, and one long example (English, plus Arabic stress when that role has it) |
+| Instance swap | Default nested component, plus each allowed preferred value from the contract. If the list is an open library, show the default and two representative swaps, and write the rule for what may be swapped |
+
+Rules:
+
+1. Use easy words a tester or frontend developer can follow
+2. Live instances only — no detach, no redrawn fake
+3. Do not document a value the source does not support
+4. A property with no example is incomplete
+5. Interaction rules (hover, focus, keyboard) stay in **Behavior & interaction**. The capability line says what the control changes; it does not restate the behavior chapter
+6. Token names stay in **Styles & Variables**. The capability line may name the property, not the whole token inventory
+
+**Gate:** every public property has a capability definition and the examples above. Missing one → `Partially documented`.
+
 ### Callouts (inline only)
 
 Number callouts consistently; keep labels outside the instance. Place them in the section that owns the fact (e.g. token callouts in Styles & Variables, part numbers in Anatomy).
@@ -308,6 +385,10 @@ or the file’s established docs convention. **Update in place.** Cross-link sib
 
 Confirm `CC-*`, platform component name, and sibling links.
 
+### 1b. Documentation template
+
+Ask which style to use as the template, unless this request already names one. Do not build the page before that answer. See **Documentation template — ask first**.
+
 ### 2. Usage evidence
 
 Request screens or accept skip; produce a short Usage Evidence Summary before building Composition.
@@ -327,7 +408,7 @@ Record API, variants, states, bindings, nested dependencies, Auto Layout, themes
 | Deprecated | Explicitly marked for replacement |
 | Unknown | Insufficient evidence |
 
-Do not invent `Ready`. Do not mark `Ready` if contract is Draft/Blocked or Styles & Variables / Variants / Usage are incomplete.
+Do not invent `Ready`. Do not mark `Ready` if contract is Draft/Blocked, the documentation template was not chosen, or Styles & Variables / Variants / property capabilities / Usage are incomplete.
 
 ### 5. Build required sections
 
@@ -349,7 +430,9 @@ In Status (and gaps), link the workflow:
 ### 7. Quality checks
 
 - Source API unchanged; no detaches  
+- Chosen documentation template recorded and followed  
 - Full `CC-*` variants covered in **Variants**  
+- **Every public property** has a capability definition and the required live examples  
 - **Styles & Variables** scoped + contextual examples present  
 - **Usage** has Use for + Don’t use for  
 - **Composition** + **Edge cases** present (or explicit pending/gap)  
@@ -378,6 +461,7 @@ Document only what the contract and source support. Typical focuses:
 
 - Component / Platform  
 - Contract ID, version, status  
+- Template: page/frame name, or the style the user described. If missing, result is `Blocked` and the ask-first question was sent  
 - Result: `Created` | `Updated` | `Partially documented` | `Blocked`  
 - Documentation status  
 - Source component modified: must be `No`  
@@ -395,8 +479,10 @@ Use `Usage evidence pending` when skipped.
 
 | Gate | Pass? | Notes |
 |---|---|---|
+| Documentation template chosen and followed | | |
 | Styles & Variables (scoped + contextual) | | |
 | Variants vs `CC-*` | | |
+| Property capabilities + examples (every public property) | | |
 | Usage (Use for / Don’t use for) | | |
 | Composition + Edge cases | | |
 
@@ -427,14 +513,17 @@ Exactly one of:
 Documentation is **complete only when all** are true:
 
 1. Target + reliable `CC-*` identified; drift recorded if any  
-2. Usage screens supplied **or** explicit source-only skip recorded  
-3. Source API unchanged; examples remain live instances (no detach)  
-4. **Styles & Variables** includes scoped bindings **and** contextual examples (not token list only)  
-5. **Variants** document every contracted value at least once  
-6. **Usage** includes Use for and Don’t use for  
-7. **Composition** and **Edge cases** are present (or explicitly pending/gapped)  
-8. Required sections Overview through Status are present with **no overlapping restatements**  
-9. Selected platform documented; siblings cross-linked when they exist  
-10. Status and gaps are honest; defects point to `/ds-fix`  
+2. Documentation **template** was named by the user and followed (or this request already named it)  
+3. Usage screens supplied **or** explicit source-only skip recorded  
+4. Source API unchanged; examples remain live instances (no detach)  
+5. **Styles & Variables** includes scoped bindings **and** contextual examples (not token list only)  
+6. **Variants** document every contracted value at least once  
+7. **Every public property** has a capability definition and the required live examples  
+8. **Usage** includes Use for and Don’t use for  
+9. **Composition** and **Edge cases** are present (or explicitly pending/gapped)  
+10. Required sections Overview through Status are present with **no overlapping restatements**  
+11. Selected platform documented; siblings cross-linked when they exist  
+12. Status and gaps are honest; defects point to `/ds-fix`  
 
-If any of items **4–6** fail → result must be `Partially documented` (not complete).
+If the template was not chosen → result is `Blocked` (ask first; do not publish a guessed style).  
+If any of items **5–8** fail → result must be `Partially documented` (not complete).

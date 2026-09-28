@@ -107,7 +107,7 @@ Default:
 27. Match the `CC-*` contract unless an approved contract update is in scope.
 28. Replace rebuilt nested dependencies with approved instances when they exist.
 29. Bind unexplained raw production values to approved Variables/Styles.
-30. Repair overlap, clipping, and inconsistent Auto Layout before marking layout fixed.
+30. Repair overlap, clipping, and inconsistent Auto Layout before marking layout fixed. This includes **set-view** overlap: reflow variants into a readable grid (groups, columns, rows in contract order; gap at least 40px; top-left of each cell). Do not change property names or values to fix placement.
 31. Do not use absolute positioning to hide Auto Layout defects.
 
 ## Foundation Proposal Contract (`FP-*`)
