@@ -23,12 +23,15 @@ Do not create, rename, move, delete, publish, unpublish, hide, bind, detach, or 
 
 ## Relationship to Other Skills
 
+Use `/ds-foundation-generate` when the file needs Variables/Styles created from a chosen open-system structure and brand seeds.
+
 Use `/ds-review` before every component to check whether existing variables and styles cover that component. Use this architecture review for deeper Variables/Styles health.
 
 Use `/ds-foundation-architecture-review` for a deeper review of the architecture and governance of Variables and Styles themselves.
 
 | Skill | Primary question |
 |---|---|
+| `/ds-foundation-generate` | Create foundations from an OSS structure + brand (mutating after `FG-*` approval) |
 | `/ds-review` | What foundations and components exist, and what blocks component work? |
 | `/ds-foundation-architecture-review` | Are Variables and Styles structured correctly for long-term system health? |
 

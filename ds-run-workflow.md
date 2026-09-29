@@ -1,6 +1,6 @@
 ---
 name: ds-run-workflow
-description: Orchestrates the design-system workflow for one target component on one platform. Use to run Jira board package (/ds-jira) → Review → Plan (CC-* + Plan Package A–E) → human approval → Build (consumes Tables C–D) → Test → Fix → Test → Document and return one final results report.
+description: Orchestrates the design-system workflow for one target component on one platform. Use to run optional Foundation generate (/ds-foundation-generate) when Variables/Styles are missing, then Jira board package (/ds-jira) → Review → Plan (CC-* + Plan Package A–E) → human approval → Build (consumes Tables C–D) → Test → Fix → Test → Document and return one final results report.
 ---
 
 # Design System Workflow Orchestrator
@@ -19,6 +19,7 @@ Primary install target: **Figma Custom Skills**. Cursor + Figma MCP may also use
 
 Handle one of these at a time:
 
+- Foundation generate-only (Variables/Styles bootstrap via `/ds-foundation-generate`)
 - One full component workflow (one platform)
 - Review-only
 - Plan-only (always ends waiting for approval)
@@ -28,6 +29,8 @@ Handle one of these at a time:
 - Foundation architecture review
 
 Do not run unrelated components in one invocation.
+
+If the live file has **no usable local Variables/Styles** for the target component, offer `/ds-foundation-generate` before `/ds-review` (or run it when the user asks for a full workflow on an empty foundation).
 
 ## Required inputs
 
@@ -61,6 +64,16 @@ Rules:
 5. Do not reinterpret or “improve” Tables C–D between Plan and Build. If they are wrong, revise Plan first.
 
 ## Workflow modes
+
+### 0. Foundation generate (when foundations are missing)
+
+Sequence:
+
+1. `/ds-foundation-generate` — structure catalog → brand seeds → `FG-*` blueprint
+2. **Hard stop** for `Approve FG-… Ready to Generate`
+3. Create Variables + Styles
+4. Optional `/ds-foundation-architecture-review`
+5. Continue into the full component workflow below
 
 ### 1. Full component workflow (default)
 

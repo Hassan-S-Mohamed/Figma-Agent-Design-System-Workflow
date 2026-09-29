@@ -9,6 +9,7 @@ A full end-to-end skill suite for one component × one platform at a time:
 | Skill | File | Role |
 |---|---|---|
 | **Orchestrator** | `ds-run-workflow.md` | Runs the full sequence and returns one combined results report |
+| **Foundation generate** | `ds-foundation-generate.md` | Bootstraps Variables + Styles from an open-system structure + brand colors/typeface (`FG-*` blueprint → approval → create) |
 | **Jira board package** | `ds-jira.md` | Paste-ready parent + subtasks (draft only; no API creates) |
 | **Review** | `ds-review.md` | Read-only foundations coverage + Plan Handoff Package |
 | **Foundation architecture** | `ds-foundation-architecture-review.md` | Deep Variables/Styles architecture health check |
@@ -20,6 +21,15 @@ A full end-to-end skill suite for one component × one platform at a time:
 
 ## Default workflow
 
+**New file / empty foundations** (run once before components):
+
+```text
+/ds-foundation-generate → [Approve FG-… Ready to Generate]
+  → /ds-foundation-architecture-review
+```
+
+**Per component** (after foundations exist):
+
 ```text
 /ds-jira → /ds-review → /ds-plan → [human approval]
   → /ds-build → /ds-test → /ds-fix (if needed) → /ds-test → /ds-document
@@ -27,9 +37,40 @@ A full end-to-end skill suite for one component × one platform at a time:
 
 **Hard gates**
 
+- Foundation generate mutates only after explicit `Approve FG-… Ready to Generate`
 - Build starts only after explicit `Approve CC-… Ready to Build`
 - Plan Package extras **C** (Variables/Styles solves) and **D** (nested configs) are executable handoffs — Build must not reinvent them
 - One component + one platform per run: `{Component} / Web | Tablet | Mobile`
+
+## Foundation generate (Variables + Styles)
+
+Use `/ds-foundation-generate` when the Figma file needs a Variables/Styles foundation before any component work.
+
+**Flow**
+
+1. Agent presents open-system **structure choices** (taxonomy only)
+2. You supply **brand seeds** (primary color, typeface, themes, optional secondary/AR font)
+3. Agent drafts an `FG-*` Foundation Blueprint (collections, aliases, Variables table, Styles table)
+4. You approve: `Approve FG-… Ready to Generate`
+5. Agent creates local Variables + Styles; optional follow-up: `/ds-foundation-architecture-review`
+
+**Structure catalog** (from [open design systems](https://www.designsystems.com/open-design-systems/)):
+
+| Choice | Best for |
+|---|---|
+| Material 3 | Tonal palettes + role tokens (surface, on-surface, …) |
+| Primer | Functional scales (`fg` / `canvas` / `border` / `accent`) |
+| Carbon | Enterprise theme layers |
+| Atlassian ADS | Elevation, border, icon, chart roles |
+| Twilio Paste | Design-to-code semantic theme objects |
+| Salesforce Lightning | Brand token + categorized color tokens |
+| Ant Design | Seed → Map → Alias + optional density collection |
+| Cloudscape | Console UI with separate density modes |
+| Custom | Your collections/modes — still Figma Variables/Styles rules |
+
+OSS kits supply **naming and layer shape**. Brand colors and typefaces come from you — competitor kit values are never copied.
+
+Figma guidance the skill follows: [Variables](https://help.figma.com/hc/en-us/articles/15339657135383-Guide-to-variables-in-Figma), [Styles](https://help.figma.com/hc/en-us/articles/360039238753-Styles-in-Figma-Design), [Variables vs Styles](https://help.figma.com/hc/en-us/articles/15871097384471-The-difference-between-variables-and-styles).
 
 ## Plan → Build handoff
 
@@ -78,6 +119,18 @@ Sibling platforms are separate builds. Web responsive breakpoints live inside th
 Example prompts:
 
 ```text
+/ds-foundation-generate
+Generate Variables and Styles for Acme.
+Brand primary: #0B5FFF
+Typeface: Inter
+Themes: Light, Dark
+```
+
+```text
+Approve FG-ACME-PRIMER-001 Ready to Generate
+```
+
+```text
 /ds-run-workflow
 Run the full workflow for Button / Web.
 ```
@@ -105,6 +158,7 @@ Build Button / Web from approved contract CC-BUTTON-WEB-001.
 ## Status
 
 - [x] First skill suite (Review, Plan, Build, Test, Fix, Document, Foundation architecture, Orchestrator)
+- [x] Foundation generate skill (`/ds-foundation-generate`) — OSS structure catalog + brand remap → Variables/Styles
 - [x] Structured output reports per skill
 - [x] Jira board package skill (`/ds-jira`)
 - [x] Plan Package A–E handoff into Build
