@@ -1,0 +1,10 @@
+# Generated install bundles (run: node scripts/bundle-skills.mjs)
+dist/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+node_modules/

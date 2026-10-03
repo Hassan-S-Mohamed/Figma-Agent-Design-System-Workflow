@@ -1,169 +1,133 @@
 # Figma Agent Design System Workflow
 
-A package of **Figma Custom Skills** (also usable with Cursor + Figma MCP) that walks an AI agent through building production-ready foundation components in a live Figma design-system file — with human approval gates, evidence-based QA, and bilingual / bidirectional support.
+**Version 2.1.0** · [CHANGELOG](CHANGELOG.md)
 
-## What we built
+A package of agent skills that walks an AI agent through building and maintaining a production design system in a live Figma file. Skills follow the [Agent Skills](https://agentskills.io/specification) format and Figma's [skill guide](https://developers.figma.com/docs/figma-mcp-server/create-skills/). It covers foundations (Variables and Styles), then one component on one platform at a time. Every step has human approval gates, durable workflow state, measured accessibility (WCAG 2.2 + APCA), and real English + Arabic / LTR + RTL support.
 
-A full end-to-end skill suite for one component × one platform at a time:
-
-| Skill | File | Role |
-|---|---|---|
-| **Orchestrator** | `ds-run-workflow.md` | Runs the full sequence and returns one combined results report |
-| **Foundation generate** | `ds-foundation-generate.md` | Bootstraps Variables + Styles from an open-system structure + brand colors/typeface (`FG-*` blueprint → approval → create) |
-| **Jira board package** | `ds-jira.md` | Paste-ready parent + subtasks (draft only; no API creates) |
-| **Review** | `ds-review.md` | Read-only foundations coverage + Plan Handoff Package |
-| **Foundation architecture** | `ds-foundation-architecture-review.md` | Deep Variables/Styles architecture health check |
-| **Plan** | `ds-plan.md` | `CC-*` Component Contract + Plan Package extras A–E |
-| **Build** | `ds-build.md` | Mutating build from an approved plan (executes Tables C–D). Lays variants in a readable grid so they do not overlap in the set view |
-| **Test** | `ds-test.md` | Read-only QA (structure, tokens, a11y, Language, Direction) |
-| **Fix** | `ds-fix.md` | Safe repairs for Critical/Major findings |
-| **Document** | `ds-document.md` | In-file component docs (docs-only; no API changes). Asks which doc style to use as the template, then defines every property capability with examples |
-
-## Default workflow
-
-**New file / empty foundations** (run once before components):
+## What's inside
 
 ```text
-/ds-foundation-generate → [Approve FG-… Ready to Generate]
-  → /ds-foundation-architecture-review
+skills/        15 skills, each skills/<name>/SKILL.md (+ references/ when long)
+standards/     Shared rules every skill links to (one source of truth)
+catalog/       Component tiers, build-order graph, per-component checklist
+scripts/       Figma Plugin API helpers + pure JS libs (contrast, grid) + tests + bundler + validator
+evals/         Prompts and golden assertions to check the skills still behave
+docs/          Review reports
 ```
 
-**Per component** (after foundations exist):
+## Skills
+
+| Command | Job | Writes |
+|---|---|---|
+| `/ds-run-workflow` | Orchestrates everything below, with gates and resume | via called skills |
+| `/ds-status` | Board of every component × platform from the ledger | none |
+| `/ds-adopt` | Bring an existing file/components under the workflow | state |
+| `/ds-foundation-generate` | Create Variables + Styles from an open-system structure + brand | foundations |
+| `/ds-foundation-architecture-review` | Foundation health; Post-generate check; Profile draft | state |
+| `/ds-foundation-extend` | Execute approved `FP-*` foundation proposals | foundations |
+| `/ds-review` | Component coverage readiness + Plan handoff | state |
+| `/ds-plan` | Versioned Component Contract (`CC-*`) with Tables B–E | state |
+| `/ds-build` | Build the component set from the approved contract | source |
+| `/ds-test` | Build QA / Release QA with stable rule IDs | state, sandbox |
+| `/ds-fix` | Repair findings (max 2 cycles) | source |
+| `/ds-document` | Docs page (or foundations docs) with live instances | docs |
+| `/ds-release` | Release notes, version, deprecation — after a human publishes | docs, state |
+| `/ds-handoff` | DTCG token export, prop → code mapping, APG runtime notes | none |
+| `/ds-jira` | Board package (draft; create only after `Create in Jira`) | none |
+
+"Read-only" skills never change the component source, the foundations, or the docs. They may still write workflow state (the state store) and temporary sandbox instances (the `_DS Sandbox` page). Sandbox instances are deleted at the end of every run.
+
+High-risk skills (`/ds-foundation-generate`, `/ds-foundation-extend`, `/ds-build`, `/ds-fix`, `/ds-release`) set `disable-model-invocation: true`, so they run only when you call them by name.
+
+## Lifecycle
 
 ```text
-/ds-jira → /ds-review → /ds-plan → [human approval]
-  → /ds-build → /ds-test → /ds-fix (if needed) → /ds-test → /ds-document
+Draft → Ready to Build → Approved → Built → Tested → Documented → Released   (+ Deprecated, Blocked)
 ```
 
-**Hard gates**
+```text
+[generate → architecture review]          only when the file has no foundations
+review → plan → ⏸ "Approve CC-BUTTON-WEB-001 v1.0 Ready to Build"
+      → build → test (Build QA) ⇄ fix (max 2)
+      → document → test (Release QA)
+      → ⏸ human publishes the library → release → handoff
+```
 
-- Foundation generate mutates only after explicit `Approve FG-… Ready to Generate`
-- Build starts only after explicit `Approve CC-… Ready to Build`
-- Plan Package extras **C** (Variables/Styles solves) and **D** (nested configs) are executable handoffs — Build must not reinvent them
-- One component + one platform per run: `{Component} / Web | Tablet | Mobile`
+Approvals are exact phrases that include the version, and the next report quotes them word for word. The full list is in [standards/lifecycle-and-ids.md](standards/lifecycle-and-ids.md).
 
-## Foundation generate (Variables + Styles)
+## Key ideas
 
-Use `/ds-foundation-generate` when the Figma file needs a Variables/Styles foundation before any component work.
-
-**Flow**
-
-1. Agent presents open-system **structure choices** (taxonomy only)
-2. You supply **brand seeds** (primary color, typeface, themes, optional secondary/AR font)
-3. Agent drafts an `FG-*` Foundation Blueprint (collections, aliases, Variables table, Styles table)
-4. You approve: `Approve FG-… Ready to Generate`
-5. Agent creates local Variables + Styles; optional follow-up: `/ds-foundation-architecture-review`
-
-**Structure catalog** (from [open design systems](https://www.designsystems.com/open-design-systems/)):
-
-| Choice | Best for |
-|---|---|
-| Material 3 | Tonal palettes + role tokens (surface, on-surface, …) |
-| Primer | Functional scales (`fg` / `canvas` / `border` / `accent`) |
-| Carbon | Enterprise theme layers |
-| Atlassian ADS | Elevation, border, icon, chart roles |
-| Twilio Paste | Design-to-code semantic theme objects |
-| Salesforce Lightning | Brand token + categorized color tokens |
-| Ant Design | Seed → Map → Alias + optional density collection |
-| Cloudscape | Console UI with separate density modes |
-| Custom | Your collections/modes — still Figma Variables/Styles rules |
-
-OSS kits supply **naming and layer shape**. Brand colors and typefaces come from you — competitor kit values are never copied.
-
-Figma guidance the skill follows: [Variables](https://help.figma.com/hc/en-us/articles/15339657135383-Guide-to-variables-in-Figma), [Styles](https://help.figma.com/hc/en-us/articles/360039238753-Styles-in-Figma-Design), [Variables vs Styles](https://help.figma.com/hc/en-us/articles/15871097384471-The-difference-between-variables-and-styles).
-
-## Plan → Build handoff
-
-`/ds-plan` produces more than a contract. After approval, `/ds-build` consumes:
-
-| Extra | Purpose |
-|---|---|
-| **A.** ASCII wireframe | Anatomy blueprint |
-| **B.** Controls table | Public API blueprint |
-| **C.** Missing Variables/Styles — solve table | Executable creates / aliases / binds |
-| **D.** Dependent components — configuration matrix | Executable nested instance configs |
-| **E.** Blocking remedies | Gate only — must be clear before mutation |
-
-## Language ≠ Direction
-
-Language and Direction are **independent axes** across the whole package (not “EN LTR + AR RTL” as one thing):
-
-| Axis | Meaning | Mechanism |
-|---|---|---|
-| **Language** | Content locale preview (EN / AR) | Content strings + approved `Text/EN/…` and `Text/AR/…` Text Styles |
-| **Direction** | Layout direction (LTR / RTL) | Direction-neutral Auto Layout; Leading/Trailing/Start/End |
-
-- Theme (Light/Dark), Language, and Direction stay separate — no `Theme × Language × Direction` variant explosion
-- Every full workflow supplies **automatic Arabic stress copy** for contracted text roles (layout / Text Style simulation, not final product translation)
-
-## Supported foundation components
-
-Button, Button Group, Input, Text Area, Avatar, Toggle, Checkbox, Radio Button, Calendar, Table, Banner, Badge, Link
+- **The state store wins over chat memory.** The Profile, Registry, Ledger, docs style, and every contract (with Tables B–E) live in `ds-state/{figma-file-key}/` in your workspace by default, as Figma's `figma-use` skill recommends. Teams (or the agent inside Figma, which has no workspace) can opt in to a `_DS System` page in the file instead by typing `Store state in the Figma file`. The live Figma file still wins for design facts. See [workflow-state](standards/workflow-state.md).
+- **Figma MCP rules.** Every skill loads `figma-use` before each `use_figma` call, passes `skillNames`, works in small calls, and returns the IDs of every node it creates or changes. See [figma-tooling](standards/figma-tooling.md) §5.
+- **Foundation Profile.** Fonts, collection names, naming grammar, scales, targets, and locales are read from the Profile. Nothing is hardcoded. See [foundation-profile](standards/foundation-profile.md).
+- **One foundation write path.** Generate, extend, build, and fix all use [foundation-mutation](standards/foundation-mutation.md).
+- **Theme, Language, and Direction are separate.** Figma Auto Layout has no RTL switch, so ordered parts use a private `Direction = LTR | RTL` helper whose property is exposed on the parent. RTL is proven on a sandbox page. See [language-direction](standards/language-direction.md).
+- **Measured, not guessed.** Scripts check bindings, Text Styles, Arabic rules, variant overlap (render bounds), and contrast (alias resolution per mode, alpha compositing, WCAG ratio, and signed APCA Lc 0.0.98G-4g). When code can't run, the result is marked `Unverified`.
+- **Stable findings.** Rule IDs (`TOK-002`, `DIR-001`, …) and fingerprints let a retest show exactly what changed. See [findings](standards/findings.md) and the [rule catalog](skills/ds-test/references/rules.md).
+- **Build order.** Tier 0 primitives (Icon, Spinner, Divider, Tooltip, Icon Button, Menu) come before Tier 1 components. Build is blocked while a required dependency isn't built yet. See [catalog](catalog/components.md).
 
 ## Platforms
 
-| Platform | Meaning |
+`{Component} / Web`, `{Component} / Tablet` (app), and `{Component} / Mobile` (app) are separate sets. Web viewports are called **Large / Medium / Small** and are driven by variable modes, never by variants. After Web is approved, Tablet and Mobile can be planned as **Sibling delta** contracts.
+
+## Install
+
+First build and check the bundles:
+
+```bash
+node scripts/bundle-skills.mjs
+node scripts/validate-skills.mjs
+```
+
+The bundler writes two editions. Both fail the run if a link is broken or two files would get the same name.
+
+- `dist/skills/<skill>/` — the Agent Skills layout: `SKILL.md`, a flat `references/` folder (standards, catalog, worked examples), and a `scripts/` folder (Figma Plugin API scripts). `SKILL.md` ends with a "Bundled files" list, so every file is one link away.
+- `dist/single/<skill>.md` — one Markdown file with the references appended and **no scripts**. Checks that need a script are done by hand and marked `Unverified`.
+
+| Runtime | Install |
 |---|---|
-| **Web** | Responsive web / portal |
-| **Tablet** | Tablet app |
-| **Mobile** | Mobile app |
+| **Cursor** | Copy `dist/skills/*` into `.cursor/skills/` (project) or `~/.cursor/skills/` (user) |
+| **Claude Code, Codex, other Agent Skills runtimes** | Copy `dist/skills/*` into the runtime's skills folder |
+| **Figma's in-app agent (custom skills)** | Upload `dist/single/<skill>.md` (single-file skills only). State then goes in the file (`_DS System`) because there is no workspace |
+| **Working on this repo** | Use `skills/` directly. Links resolve relative to the repo |
 
-Sibling platforms are separate builds. Web responsive breakpoints live inside the Web component.
+Requirements: the [Figma MCP server](https://developers.figma.com/docs/figma-mcp-server/) with the `use_figma` tool and Figma's `figma-use` skill installed. Running the scripts needs Plugin API JavaScript through `use_figma`. Every skill runs a capability check first and reports what it could not do. `/ds-jira` needs no Figma access; its Create mode needs a Jira tool.
 
-## How to use
-
-**Primary install target:** Figma Custom Skills — add the skill markdown files from this repo.
-
-**Also works with:** Cursor + Figma MCP when those skills are available in the agent environment.
-
-Example prompts:
+## Example prompts
 
 ```text
 /ds-foundation-generate
-Generate Variables and Styles for Acme.
-Brand primary: #0B5FFF
-Typeface: Inter
-Themes: Light, Dark
+Generate Variables and Styles for Acme. Structure: Primer. Brand primary: #0B5FFF.
+Typefaces: Inter (EN), IBM Plex Sans Arabic (AR). Themes: Light, Dark.
 ```
 
 ```text
-Approve FG-ACME-PRIMER-001 Ready to Generate
+Approve FG-ACME-PRIMER-001 v1 Ready to Generate
 ```
 
 ```text
 /ds-run-workflow
-Run the full workflow for Button / Web.
+Run the full workflow for Button on Web.
 ```
 
 ```text
-/ds-review
-Review foundations for Button on Web.
-Do not modify the file.
+Approve CC-BUTTON-WEB-001 v1.0 Ready to Build. Also approve FP-SYS-001
 ```
 
 ```text
-/ds-plan
-Plan Button for Web.
+/ds-status
 ```
 
-```text
-Approve CC-BUTTON-WEB-001 Ready to Build
+## Development
+
+```bash
+node --test scripts/test/*.test.mjs     # pure libs + mocked Figma scripts
+node scripts/bundle-skills.mjs          # bundle; exits 1 on broken links or name collisions
+node scripts/validate-skills.mjs        # Agent Skills spec + Figma skill guide checks
 ```
 
-```text
-/ds-build
-Build Button / Web from approved contract CC-BUTTON-WEB-001.
-```
+Evals: [evals/README.md](evals/README.md).
 
-## Status
+## License
 
-- [x] First skill suite (Review, Plan, Build, Test, Fix, Document, Foundation architecture, Orchestrator)
-- [x] Foundation generate skill (`/ds-foundation-generate`) — OSS structure catalog + brand remap → Variables/Styles
-- [x] Structured output reports per skill
-- [x] Jira board package skill (`/ds-jira`)
-- [x] Plan Package A–E handoff into Build
-- [x] Language separated from Direction + automatic Arabic stress copy
-
-## License / ownership
-
-Private workflow package for building and maintaining a Figma design system with an AI agent.
+Proprietary — see [LICENSE](LICENSE).
