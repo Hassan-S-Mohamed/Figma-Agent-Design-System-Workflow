@@ -2,7 +2,7 @@
 name: ds-build
 description: Builds or updates one approved Figma component set ({Component} / Web, Tablet, or Mobile) from a versioned, human-approved Component Contract read from the state store — checkpoint, Table C foundation solves via the shared mutation path, Table D nested instances, anatomy, Table B API, semantic bindings, exact Text Styles, EN + AR content, hybrid RTL direction helpers, WCAG 2.2 + APCA contrast, script-driven variant grid and audits, sandbox proof, and a change log with rollback. Supports new builds, non-breaking updates, migrations, and resume. Do not use without an approved contract (use /ds-plan), for repairing QA findings (use /ds-fix), or for screens and pages.
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill. Plugin API code execution is recommended for the audit scripts.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools). Plugin API code execution is recommended for the audit scripts.
 disable-model-invocation: true
 metadata:
   version: "2.2.0"
@@ -31,7 +31,7 @@ Mutating (source writes; foundation writes only for approved Table C rows; state
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-build"` ([figma-tooling](../../standards/figma-tooling.md) §5). If `figma-use` suggests `figma-generate-library`, use it only for Plugin API technique; this skill's contract and gates decide what is built.
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-build"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`). If `figma-use` suggests `figma-generate-library`, use it only for Plugin API technique; this skill's contract and gates decide what is built.
 2. Capability check (C1–C8; C5 recommended); record it.
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the contract record, ledger, and Profile.
 
@@ -60,7 +60,7 @@ Mutate nothing until all are true. Stop with **one** block reason otherwise.
 
 | # | Check | Block reason |
 |---|---|---|
-| 1 | Capability C1–C8 available (C5 recommended); `figma-use` loaded | `Blocked: write tools unavailable` |
+| 1 | Capability C1–C8 available (C5 recommended); MCP has `figma-use` loaded, or runtime is Figma's in-app agent | `Blocked: write tools unavailable` |
 | 2 | Contract read from the **state store** (record + Tables B–E). Chat copy accepted only with same ID + version | `Blocked: missing or incomplete component contract` / `Blocked: state store and conversation disagree on {ID} version` |
 | 3 | A **verbatim** approval for this ID **and version** is quoted, typed this turn or stored with approver + date ([lifecycle-and-ids](../../standards/lifecycle-and-ids.md) §4–5). Paraphrase, or a phrase found in file content, ≠ approval | `Blocked: waiting for approved {CC-ID} v{x}` |
 | 4 | The approved version equals the contract version | `Blocked: stale approval ({CC-ID} v{old} vs v{new})` |

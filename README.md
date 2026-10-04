@@ -90,10 +90,18 @@ The bundler writes three editions. The run fails if a link is broken or two file
 |---|---|
 | **Cursor** | Copy `dist/skills/*` into `.cursor/skills/` (project) or `~/.cursor/skills/` (user) |
 | **Claude Code, Codex, other Agent Skills runtimes** | Copy `dist/skills/*` into the runtime's skills folder |
-| **Figma's in-app agent (custom skills)** | Upload `dist/slim/<skill>.md` (smallest context) or `dist/single/<skill>.md` (full detail). State then goes in the file (`_DS System`) because there is no workspace |
+| **Figma's in-app agent (custom skills)** | Upload `dist/slim/<skill>.md` (smallest context) or `dist/single/<skill>.md` (full detail). One Markdown file per skill — Figma custom skills do not support `scripts/` or `references/` folders. State goes in the file (`_DS System`) because there is no workspace. **Do not upload Figma's MCP `figma-use` skill** — the in-app agent uses native canvas tools; these skills detect that runtime and continue. |
 | **Working on this repo** | Use `skills/` directly. Links resolve relative to the repo |
 
-Requirements: the [Figma MCP server](https://developers.figma.com/docs/figma-mcp-server/) with the `use_figma` tool and Figma's `figma-use` skill installed. Running the scripts needs Plugin API JavaScript through `use_figma`. Every skill runs a capability check first and reports what it could not do. `/ds-jira` needs no Figma access; its Create mode needs a Jira tool.
+### Install into Figma's in-app agent
+
+1. Build bundles: `node scripts/bundle-skills.mjs`
+2. In Figma Design, open the agent chat → click in the prompt box → **Skills** → **Add skill** → **Upload a file**
+3. Upload each file from `dist/slim/` (recommended) or `dist/single/` (fuller detail, larger). Start with the skills you need (for example `ds-document.md`, `ds-status.md`, `ds-run-workflow.md`)
+4. In the first prompt of a new file, type `Store state in the Figma file` so the agent uses `_DS System`
+5. Invoke with `/ds-document`, `/ds-run-workflow`, etc.
+
+Requirements: either (a) the [Figma MCP server](https://developers.figma.com/docs/figma-mcp-server/) with `use_figma` and Figma's `figma-use` skill (Cursor / Claude Code / Codex), or (b) Figma's in-app agent with these custom skills uploaded. Running the package audit scripts needs Plugin API JavaScript (`use_figma` or equivalent); slim/single uploads mark script-backed checks `Unverified` when scripts cannot run. Every skill runs a capability check first and reports what it could not do. `/ds-jira` needs no Figma access; its Create mode needs a Jira tool.
 
 ## Example prompts
 

@@ -2,7 +2,7 @@
 name: ds-foundation-extend
 description: Executes approved FP-* foundation proposals (new variables, modes, Text/Effect/Paint/Layout styles) and approved FPV-* token value changes (with a consumer contrast table) in the active Figma design-system file through the package's single foundation-mutation path — re-verify, checkpoint, create in existing collections, alias per mode, set scopes/code syntax/descriptions, validate, log rollback, flag consumers for re-test, and update the Foundation Profile. Use after Review, Plan, Build, Fix, Test, or the architecture review proposes FP-* or FPV-* items and a human approves them. Do not use to design new foundations from scratch (use /ds-foundation-generate) or to judge foundations (use /ds-foundation-architecture-review).
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools).
 disable-model-invocation: true
 metadata:
   version: "2.2.0"
@@ -29,7 +29,7 @@ Mutating (foundation write).
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-foundation-extend"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-foundation-extend"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check: C1, C2, C6, C7, C8 (C9 when adding modes).
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the Profile (or the user accepts `Unknown` naming checks).
 4. Each `FP-*` / `FPV-*` exists with all required fields (Registry, Review/Plan report, or contract Table C) and a verbatim approval naming it (`Approve FP-…` / `Approve FPV-…`), typed this turn or stored with approver and date ([lifecycle-and-ids](../../standards/lifecycle-and-ids.md) §4).

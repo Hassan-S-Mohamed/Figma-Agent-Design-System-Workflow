@@ -2,7 +2,7 @@
 name: ds-handoff
 description: Prepares the developer handoff for a released (or tested) Figma component and its foundations — DTCG 2025.10 token export with modes and aliases (Style Dictionary ready), Figma property to code prop mapping (Code Connect ready), runtime accessibility notes from the WAI-ARIA APG pattern, Direction and Language implementation notes, and the contrast evidence table. Read-only in Figma; outputs files or text. Do not use for design-side docs pages (use /ds-document) or to write production component code.
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill. Writes export files only when the runtime has a workspace.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools). Writes export files only when the runtime has a workspace.
 metadata:
   version: "2.2.0"
   mcp-server: figma
@@ -31,7 +31,7 @@ Read-only in Figma. Outputs are files in the workspace (when allowed) or text in
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-handoff"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-handoff"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1, C3, C4; C5 for `resolveVariable`); record it.
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
 

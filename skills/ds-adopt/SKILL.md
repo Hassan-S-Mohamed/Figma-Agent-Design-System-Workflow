@@ -2,7 +2,7 @@
 name: ds-adopt
 description: Brings an existing Figma design-system file or existing component sets under the ds-* workflow without rebuilding them — sets up the state store, drafts a Foundation Profile from the live file for human confirmation, seeds the Registry, and writes as-is contracts (CC-* v0.x, mode Adopted) plus ledger rows for chosen components, with a first-pass findings scan. Use when a team already has foundations or components that were not made by this package. Do not use on an empty file (use /ds-foundation-generate) or to fix or rebuild components (use /ds-fix or /ds-build).
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools).
 metadata:
   version: "2.2.0"
   mcp-server: figma
@@ -32,7 +32,7 @@ The goal is a "workflow-ready" file:
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-adopt"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-adopt"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1–C9); record it.
 3. Choose the state store mode ([workflow-state](../../standards/workflow-state.md) §1). Default: workspace `ds-state/{file-key}/`.
 

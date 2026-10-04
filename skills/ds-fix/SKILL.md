@@ -2,7 +2,7 @@
 name: ds-fix
 description: Safely repairs confirmed Critical and Major findings (by fingerprint) on one Figma component set ({Component} / Web, Tablet, or Mobile) within its versioned contract — checkpoint, minimal repairs, foundation changes only via approved FP-* through the shared mutation path, WCAG 2.2 + APCA re-measurement, revalidation with the same rules and scripts, a change log with rollback, deferred-findings logging, and a two-cycle limit before escalating. Do not use to add features or change the API (use /ds-plan then /ds-build), or to find problems in the first place (use /ds-test).
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill. Plugin API code execution is recommended for revalidation scripts.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools). Plugin API code execution is recommended for revalidation scripts.
 disable-model-invocation: true
 metadata:
   version: "2.2.0"
@@ -29,7 +29,7 @@ Mutating (source writes; foundation writes only for approved `FP-*`; state write
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-fix"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-fix"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1–C8; C5 recommended); record it.
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the contract record, ledger (`Fix cycles`, findings, fingerprints), and Profile.
 

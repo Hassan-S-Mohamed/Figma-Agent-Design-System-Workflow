@@ -39,7 +39,9 @@ export function rewriteLinks(text, fileAbs, mapTarget) {
  * frontmatter. `raw` keeps the unparsed values ("metadata.version" → '"2.2.0"') so quoting can be checked.
  */
 export function parseFrontmatter(text) {
-  const m = text.match(/^---\n([\s\S]*?)\n---\n?/);
+  // Normalize CRLF so Windows checkouts parse the same as LF.
+  const normalized = text.replace(/\r\n/g, '\n');
+  const m = normalized.match(/^---\n([\s\S]*?)\n---\n?/);
   if (!m) return null;
   const data = {};
   const raw = {};
@@ -58,7 +60,7 @@ export function parseFrontmatter(text) {
       raw[top[1]] = top[2];
     }
   }
-  return { data, raw, body: text.slice(m[0].length), bodyStartLine: m[0].split('\n').length };
+  return { data, raw, body: normalized.slice(m[0].length), bodyStartLine: m[0].split('\n').length };
 }
 
 function unquote(v) {

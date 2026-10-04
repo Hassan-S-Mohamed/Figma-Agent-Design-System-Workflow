@@ -2,7 +2,7 @@
 name: ds-foundation-generate
 description: Generates Figma Variables and Styles foundations by adapting an open-source design-system structure (Material 3, Primer, Carbon, Atlassian, Paste, Lightning, Ant, Cloudscape, Custom) to the user's brand colors and typefaces, with deterministic ramps, required semantic roles, scopes, code syntax, Arabic Text Style rules, a WCAG + APCA smoke check, and a written Foundation Profile. Use when bootstrapping or extending a design-system file before component work. Do not use for one or two approved additions (use /ds-foundation-extend), for reviewing existing foundations (use /ds-foundation-architecture-review), or for building components.
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill. Works in a source library file only.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools). Works in a source library file only.
 disable-model-invocation: true
 metadata:
   version: "2.2.0"
@@ -34,7 +34,7 @@ New file order: `/ds-foundation-generate` → `/ds-foundation-architecture-revie
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-foundation-generate"` ([figma-tooling](../../standards/figma-tooling.md) §5). This package's blueprint and gates decide **what** to create; `figma-generate-library` may only guide **how**.
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-foundation-generate"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`). This package's blueprint and gates decide **what** to create; `figma-generate-library` may only guide **how**.
 2. Capability check passes C1, C2, C6, C7, C8, C9. Otherwise `Blocked: write tools unavailable`.
 3. Choose the state store mode ([workflow-state](../../standards/workflow-state.md) §1).
 

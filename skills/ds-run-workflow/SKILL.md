@@ -2,7 +2,7 @@
 name: ds-run-workflow
 description: Orchestrates the full Figma design-system lifecycle for one component on one platform (or a foundations bootstrap) — status and resume from the ledger, dependency check against the build-order graph, foundation generate/extend, review, plan, versioned human approval, build, Build QA, fix (max two cycles), document, Release QA, release, and handoff. Routes to every ds-* skill (for the five user-started mutating skills it prints the exact command to type), stops at each gate, and never skips approvals. Use when the user wants the whole workflow or to resume a component. Do not use for a single step the user names directly (call that ds-* skill) or for screen and page design.
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill. A Jira tool is optional, for /ds-jira only.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools). A Jira tool is optional, for /ds-jira only.
 metadata:
   version: "2.2.0"
   mcp-server: figma
@@ -26,7 +26,7 @@ You are the design-system program lead. Move one `{Component} / {Platform}` from
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-run-workflow"` (each called skill passes its own name). See [figma-tooling](../../standards/figma-tooling.md) §5.
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-run-workflow"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`). On MCP, each called skill passes its own `skillNames`.
 2. Run the capability check (C1–C9) and record it.
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)): `ds-state/{file-key}/` in the workspace by default, or the `_DS System` page when the user opted in.
 
@@ -154,7 +154,7 @@ Input: `Approve CC-BUTTON-WEB-001 v1.0 Ready to Build` typed by the user. Expect
 - **Dependency not built** → `Blocked: dependency {X} / {Platform} not Built`; offer to run `{X}` first.
 - **Third failing Build QA** → stop the loop; offer a `/ds-plan` revision or a `DEC-*` decision.
 - **User asks to skip an approval** → refuse and print the exact phrase needed.
-- **`figma-use` missing** → `Blocked: figma-use skill not available`.
+- **`figma-use` missing on MCP** → `Blocked: figma-use skill not available`. Inside Figma's in-app agent, do not block — report `Tooling: Figma agent (native)`.
 
 ## Output
 

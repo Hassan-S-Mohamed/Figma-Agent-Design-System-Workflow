@@ -2,7 +2,7 @@
 name: ds-document
 description: Creates or updates usage-focused documentation for one tested Figma component ({Component} / Web, Tablet, or Mobile) — or, in Foundations mode, for a foundation set — using live instances only, a remembered docs template, usage evidence, scoped Styles & Variables, complete variants, property capabilities with examples, separate Theme / Language / Direction columns, version history, and developer notes. Docs-only writes; hands off to Release QA. Do not use before Build QA passes (use /ds-test), to fix defects found while documenting (use /ds-fix), or for code-side developer handoff (use /ds-handoff).
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools).
 metadata:
   version: "2.2.0"
   mcp-server: figma
@@ -28,7 +28,7 @@ Docs writes only (+ state writes for the docs style record and ledger). Never ed
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-document"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-document"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1, C3, C4, C6, C7, C8); record it. Save a checkpoint before the first docs write ([figma-tooling](../../standards/figma-tooling.md) §3).
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
 

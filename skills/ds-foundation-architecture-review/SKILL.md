@@ -2,7 +2,7 @@
 name: ds-foundation-architecture-review
 description: Read-only expert review of the Variables and Styles architecture in the active Figma design-system file — collections, token layers, aliases, modes, scopes, naming, publication, Text Style-to-variable bindings, paint/effect/layout styles, governance, and optional DTCG interoperability. Includes a fast Post-generate check and a Profile draft mode for files made outside the package. Use before component work or when foundations look unhealthy. Do not use to review a single component (use /ds-review) or to change foundations (use /ds-foundation-extend or /ds-foundation-generate).
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools).
 metadata:
   version: "2.2.0"
   mcp-server: figma
@@ -31,7 +31,7 @@ Read-only: no source, foundation, or docs writes. State writes (ledger, Profile 
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-foundation-architecture-review"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-foundation-architecture-review"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1, C3, C4, C5); record it.
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the Profile if present.
 

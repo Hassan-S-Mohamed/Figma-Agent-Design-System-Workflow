@@ -2,7 +2,7 @@
 name: ds-release
 description: Closes the loop after a human publishes the Figma library — verifies the component is Documented and Release QA passed, writes release notes (added / changed / fixed / deprecated / breaking with MIG-* steps), bumps and records the version, moves the contract to Released, and runs deprecation (mark, point to replacement, keep for consumers) when asked. Never publishes the library itself. Do not use before Release QA passes (use /ds-test) or to prepare developer files (use /ds-handoff).
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools).
 disable-model-invocation: true
 metadata:
   version: "2.2.0"
@@ -28,7 +28,7 @@ Docs writes (release notes block on the docs page, deprecation banner) and state
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-release"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-release"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1, C3, C4, C6, C7, C8); record it. Save a checkpoint before the first docs write ([figma-tooling](../../standards/figma-tooling.md) §3).
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
 

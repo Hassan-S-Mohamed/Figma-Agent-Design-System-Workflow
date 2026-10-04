@@ -18,7 +18,7 @@ Before any inspection, list what the current tools can do. Put the result in the
 
 Each skill lists one capability set in its Prerequisites. A skill that makes source, foundation or docs writes lists C6 and C8 (it saves a checkpoint, §3); a skill that records state lists C7.
 
-Figma MCP rules (§5) apply whenever the runtime uses the Figma MCP server.
+Figma write rules (§5) apply in every runtime. MCP-only steps (`figma-use`, `skillNames`, `use_figma`) apply only when the runtime uses the Figma MCP server.
 
 ## 2. Write categories
 
@@ -58,17 +58,28 @@ State these correctly; do not invent features.
 9. `absoluteRenderBounds` includes strokes and effects; use it for overlap checks (fallback: `absoluteBoundingBox` plus effect extents).
 
 <!-- core -->
-## 5. Figma MCP rules
+## 5. Figma write rules (MCP and in-app agent)
 
 These follow Figma's [skill guide](https://developers.figma.com/docs/figma-mcp-server/create-skills/) and its [`figma-use`](https://github.com/figma/mcp-server-guide/blob/main/skills/figma-use/SKILL.md) skill.
 
-1. **Invoke the `figma-use` skill before every `use_figma` call.** It holds the Plugin API rules that prevent hard-to-debug failures. If it is not installed, stop: `Blocked: figma-use skill not available`.
-2. **Always pass `skillNames`** to `use_figma`, listing `figma-use` and the running skill, for example `skillNames: "figma-use,ds-build"`. If a skill was loaded as an MCP resource, prefix its name with `resource:`. This parameter is used for logging only.
-3. **Script shape:** plain JavaScript with top-level `await` and `return`. No async IIFE, no `figma.closePlugin()`, no `figma.notify()`, and no `console.log` for results. The package scripts already follow this. Paste them in the order given in `scripts/README.md`.
-4. **Return every created or changed node ID** from a write script (`createdNodeIds`, `mutatedNodeIds`). Nothing carries over between `use_figma` calls, so later calls pass these IDs as string literals. Record the important ones (set, helpers, sandbox frame) in the ledger.
-5. **Switch pages at most once per call** with `await figma.setCurrentPageAsync(page)`. Split multi-page work into parallel calls.
-6. **On a `use_figma` error, stop.** If `safeToRetryWithoutCanvasRead` is false, read the canvas first to see what changed. Then fix the cause and retry. Never retry blindly on top of a half-written state.
-7. **Other Figma skills:** `figma-use` may suggest loading `figma-generate-library` (component and foundation creation) or `figma-generate-design` (screens). When a `ds-*` skill is running, its gates, contract, and standards decide **what** to build. Use those Figma skills only for **how** to call the Plugin API.
+### 5a. Pick the runtime (Phase 0)
+
+| Runtime | How you know | Tooling line in the report | `figma-use` |
+|---|---|---|---|
+| **Figma in-app agent** | You are running inside Figma Design / Figma Make with native canvas tools; there is no separate MCP `use_figma` tool | `Tooling: Figma agent (native)` | **Do not stop.** There is nothing to install. Follow the Plugin API / write-safety rules in §5b with native tools. Use **in-file** state (`_DS System`) — see [workflow-state.md](workflow-state.md). |
+| **MCP client** (Cursor, Claude Code, Codex, …) | `use_figma` (or equivalent Plugin API execution tool) is available | `Tooling: figma-use loaded · skillNames "figma-use,{skill}"` | **Required.** Invoke `figma-use` before every `use_figma` call. If it is not installed, stop: `Blocked: figma-use skill not available`. |
+
+Never block a Figma in-app agent run solely because `figma-use` is missing.
+
+### 5b. Write-safety rules (every runtime)
+
+1. **MCP only — invoke `figma-use` before every `use_figma` call.** It holds the Plugin API rules that prevent hard-to-debug failures.
+2. **MCP only — always pass `skillNames`** to `use_figma`, listing `figma-use` and the running skill, for example `skillNames: "figma-use,ds-build"`. If a skill was loaded as an MCP resource, prefix its name with `resource:`. This parameter is used for logging only.
+3. **Script shape** (when executing Plugin API JavaScript): plain JavaScript with top-level `await` and `return`. No async IIFE, no `figma.closePlugin()`, no `figma.notify()`, and no `console.log` for results. The package scripts already follow this. Paste them in the order given in `scripts/README.md`. Inside the Figma agent, prefer the agent's native write tools; when you do run Plugin API scripts, use the same shape.
+4. **Return every created or changed node ID** from a write (`createdNodeIds`, `mutatedNodeIds`). Nothing carries over between isolated script calls, so later calls pass these IDs as string literals. Record the important ones (set, helpers, sandbox frame) in the ledger.
+5. **Switch pages at most once per isolated script call** with `await figma.setCurrentPageAsync(page)`. Split multi-page work into parallel calls.
+6. **On a write error, stop.** If the tool reports `safeToRetryWithoutCanvasRead` as false (MCP), or you are unsure what changed (any runtime), read the canvas first. Then fix the cause and retry. Never retry blindly on top of a half-written state.
+7. **Other Figma skills (MCP):** `figma-use` may suggest loading `figma-generate-library` or `figma-generate-design`. When a `ds-*` skill is running, its gates, contract, and standards decide **what** to build. Use those Figma skills only for **how** to call the Plugin API.
 8. Set `node.description` only on a `COMPONENT` or `COMPONENT_SET`, never on frames or instances.
 9. Test on a duplicate or example file, never on an important working file.
 <!-- /core -->

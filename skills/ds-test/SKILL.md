@@ -2,7 +2,7 @@
 name: ds-test
 description: Evidence-based QA of one built Figma component set ({Component} / Web, Tablet, or Mobile) against its versioned contract, using a stable rule catalog (STR, TOK, TXT, THM, RSP, STA, A11Y, LNG, DIR, DEP, DOC, CON), finding fingerprints, scripts for bindings/text styles/overlap/contrast (WCAG 2.2 + APCA), and sandbox-only mode/Direction/content switching. Two scopes — Build QA (after build) and Release QA (after docs). Results Pass / Pass with findings / Fail. Do not use to repair findings (use /ds-fix) or to check readiness before a contract exists (use /ds-review).
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill. Plugin API code execution is recommended for the audit scripts.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools). Plugin API code execution is recommended for the audit scripts.
 metadata:
   version: "2.2.0"
   mcp-server: figma
@@ -29,7 +29,7 @@ No source, foundation, or docs writes. **Sandbox writes** (temporary instances o
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-test"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-test"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1–C4, C5 for scripts, C6 for sandbox instances, C7 for state). Record it.
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
 

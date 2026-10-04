@@ -2,7 +2,7 @@
 name: ds-plan
 description: Creates or revises a versioned Component Contract (CC-*) for one component on one platform (Web, Tablet, or Mobile) — purpose, anatomy, a single controls table (Table B) as the public API, states, content with EN + AR stress copy, responsive rules, Theme / Language / Direction (hybrid RTL levels), WCAG 2.2 + APCA accessibility, foundation map with FP-* solves, nested dependency configs, blocks, and optional code mapping. Writes the contract record to the state store and stops for a versioned human approval. Supports Sibling delta contracts for Tablet/Mobile. Do not use before /ds-review has a handoff for the target, or to build anything (use /ds-build after approval).
 license: MIT
-compatibility: Requires the Figma MCP server (use_figma) and the figma-use skill.
+compatibility: Requires Figma write access via the Figma MCP server (use_figma + figma-use) or Figma's in-app agent (native canvas tools).
 metadata:
   version: "2.2.0"
   mcp-server: figma
@@ -33,7 +33,7 @@ State writes only (contract record, ledger, registry). No source or foundation w
 
 ## Prerequisites
 
-1. Invoke the `figma-use` skill before every `use_figma` call and pass `skillNames: "figma-use,ds-plan"` ([figma-tooling](../../standards/figma-tooling.md) §5).
+1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-plan"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1, C3, C4; C7 for the contract record).
 3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
 
