@@ -108,7 +108,28 @@ Components must be built in dependency order ([catalog/components.md](../../cata
 
 ---
 
-## 3. Tool Reference for Antigravity
+## 3. Dual Execution: Main Workflow vs. Standalone Single Task
+
+Antigravity orchestrates each skill in one of two modes depending on user intent:
+
+| Execution Mode | Behavior | Gate / Prerequisite Policy | When to Use |
+|---|---|---|---|
+| **Main Workflow Mode** | Chained lifecycle progression: `review → plan → approve → build → test → fix → document → release → handoff`. Updates `ds-state/` ledger and registry. | Enforces strict dependency build order, state store contracts, and exact approval phrases. | Full component creation, production library milestones, or when `/ds-run-workflow` is active. |
+| **Standalone Single-Task Mode** | Direct, isolated task execution on a component, canvas selection, or foundation token set. | Zero blocking: operates directly without requiring prior review, test records, or ledger dependencies. | Quick audits (`/ds-test`), instant documentation (`/ds-document`), ad-hoc contract drafting (`/ds-plan`), targeted repairs (`/ds-fix`), direct token additions (`/ds-foundation-extend`), or developer token exports (`/ds-handoff`). |
+
+### Standalone Dispatch Quick Reference:
+- `/ds-review`: Run readiness check directly on active file or component.
+- `/ds-plan`: Draft `CC-*` contract directly from prompt specs or canvas inspection.
+- `/ds-build`: Construct component from inline spec or selection with user confirmation.
+- `/ds-test`: Audit any canvas frame or component for WCAG/APCA contrast, bindings, typography, and RTL.
+- `/ds-fix`: Perform safe targeted repairs on selected node or reported issue.
+- `/ds-document`: Generate comprehensive docs page with live interactive instances for any canvas component.
+- `/ds-handoff`: Export DTCG tokens, Code Connect mappings, and APG runtime specs for any component.
+- `/ds-foundation-extend`: Add or update design tokens directly in existing collections.
+
+---
+
+## 4. Tool Reference for Antigravity
 
 When inspecting Figma file context, Antigravity uses the available MCP server tools:
 
@@ -125,7 +146,7 @@ When inspecting Figma file context, Antigravity uses the available MCP server to
 
 ---
 
-## 4. Bilingual Decision Guide (English & Arabic)
+## 5. Bilingual Decision Guide (English & Arabic)
 
 When Antigravity asks the user for design system choices, present them clearly in both languages:
 
@@ -141,7 +162,7 @@ When Antigravity asks the user for design system choices, present them clearly i
 
 ---
 
-## 5. References & Deep Guides
+## 6. References & Deep Guides
 
 - [Bridge Protocol & Commands](./references/bridge-protocol.md): How Antigravity and Figma Agent exchange state, syntax, and gates.
 - [Fast-Track Playbook](./references/fast-track-playbook.md): High-speed templates for instant foundation and Tier 0 primitive setup.

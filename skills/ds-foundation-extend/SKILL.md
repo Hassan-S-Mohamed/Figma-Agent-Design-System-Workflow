@@ -18,6 +18,7 @@ Mutating (foundation write).
 ## When to use
 
 - "Execute approved FP-SYS-001, FP-BUTTON-WEB-002."
+- Standalone single-task token creation: "Add brand color tokens #0B5FFF, #10B981" or "Add spacing tokens" to existing collections directly.
 - A review, plan, or test raised `FP-*` items and the human typed `Approve FP-…`.
 - A build or fix stopped with `Blocked: shared token change needs FPV-…`, and the human typed `Approve FPV-…` after reading the consumer contrast table.
 
@@ -25,14 +26,14 @@ Mutating (foundation write).
 
 - Creating a whole foundation set → `/ds-foundation-generate`.
 - Deciding whether a foundation change is needed → `/ds-foundation-architecture-review` or `/ds-review`.
-- Any FP without a verbatim approval → stop; ask for it.
+- In Main Workflow: Any FP without a verbatim approval → stop; ask for it (or use Standalone mode with prompt confirmation).
 
 ## Prerequisites
 
 1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-foundation-extend"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check: C1, C2, C6, C7, C8 (C9 when adding modes).
-3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the Profile (or the user accepts `Unknown` naming checks).
-4. Each `FP-*` / `FPV-*` exists with all required fields (Registry, Review/Plan report, or contract Table C) and a verbatim approval naming it (`Approve FP-…` / `Approve FPV-…`), typed this turn or stored with approver and date ([lifecycle-and-ids](../../standards/lifecycle-and-ids.md) §4).
+3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the Profile when available (or the user accepts `Unknown` naming checks).
+4. Main Workflow Mode: Each `FP-*` / `FPV-*` exists with all required fields (Registry, Review/Plan report, or contract Table C) and a verbatim approval naming it (`Approve FP-…` / `Approve FPV-…`), typed this turn or stored with approver and date ([lifecycle-and-ids](../../standards/lifecycle-and-ids.md) §4). Standalone Single-Task Mode: Token definitions are parsed directly from prompt.
 5. Checkpoint saved.
 
 ## References
@@ -42,6 +43,11 @@ Mutating (foundation write).
 Scripts: [contrast-pairs](../../scripts/figma/contrast-pairs.js), [text-style-audit](../../scripts/figma/text-style-audit.js)
 
 ## Instructions
+
+### Modes
+
+- **Main Workflow Mode**: Follows steps 1–6 below for approved `FP-*` proposals or `FPV-*` token value changes from the state store.
+- **Standalone Single-Task Mode**: Directly creates or updates specified variables and styles in existing collections from user prompt, validates naming, scopes, and contrast, confirms with user (`Confirm extend ...`), saves checkpoint, and logs created IDs.
 
 1. **Intake** — list each FP: ID, type, name, collection/group, modes/values, scopes, code syntax, approval quote.
 2. **Re-verify** — gap still exists; no equivalent under another name; destination collection/group exists; mode count fits the plan limit.

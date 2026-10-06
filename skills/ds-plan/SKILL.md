@@ -22,12 +22,13 @@ State writes only (contract record, ledger, registry). No source or foundation w
 ## When to use
 
 - "Create the component contract for {Component} on {Web | Tablet | Mobile}. Use the latest /ds-review Plan Handoff Package."
+- Standalone single-task planning: "Plan {Component} on {Platform}" directly from prompt specifications, requirements, or canvas selection without running the entire workflow pipeline.
 - Revising a contract (new property, breaking change, review feedback).
 - A sibling platform after `{Component} / Web` is `Approved` (Sibling delta).
 
 ## When not to use
 
-- No review yet → `/ds-review` first.
+- In Main Workflow: No review yet → `/ds-review` first (or use Standalone Single-Task mode if planning on unverified foundations).
 - Building or changing the component → `/ds-build` (after approval) or `/ds-fix`.
 - Creating foundations → `/ds-foundation-extend` (after `Approve FP-…`).
 
@@ -35,7 +36,7 @@ State writes only (contract record, ledger, registry). No source or foundation w
 
 1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-plan"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1, C3, C4; C7 for the contract record).
-3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
+3. Open the state store ([workflow-state](../../standards/workflow-state.md)) when available.
 
 ## References
 
@@ -50,6 +51,7 @@ Skill files: [worked example — Button / Web](references/worked-example.md)
 | Mode | Use when |
 |---|---|
 | **New contract** (default) | First contract for this component + platform |
+| **Standalone task** | Plan a component directly as an isolated single task from prompt or canvas facts without requiring a preceding review handoff or blocking on unbuilt dependencies |
 | **Revision** | Change an existing contract. Apply the version rules below |
 | **Sibling delta** | `{Component} / Web` (or another sibling) is `Approved` or later. Write a new `CC-{COMP}-{PLAT}-NNN` containing a delta table + only the sections that differ; every other section says `Same as {parent CC} v{x} §n`. See [platforms](../../standards/platforms.md) §4 |
 | **Adopted** | Called from `/ds-adopt` to describe an existing component as-is |
@@ -67,10 +69,15 @@ Any behavior change cancels earlier approvals. Each revision prints a **Change t
 
 ### 1. Read the inputs
 
-1. Read in this order (state store wins — [workflow-state](../../standards/workflow-state.md) §3): Profile, ledger row, existing contract record, the latest Review handoff (same target, same Profile version).
-2. **Dependency graph** ([catalog](../../catalog/components.md)): every Required dependency must be `Built` or later on this platform. Otherwise → `Blocked: dependency {X} / {Platform} not Built`.
-3. No Review handoff → `Blocked: run /ds-review first` (unless the user explicitly accepts planning on unverified foundations; then every foundation row is `Unknown`).
-4. Contract ID: from the Registry (`CC-{COMP}-{PLAT}-{NNN}`), or the existing ID when revising.
+1. **Main Workflow Mode**:
+   - Read in this order (state store wins — [workflow-state](../../standards/workflow-state.md) §3): Profile, ledger row, existing contract record, the latest Review handoff (same target, same Profile version).
+   - **Dependency graph** ([catalog](../../catalog/components.md)): every Required dependency must be `Built` or later on this platform. Otherwise → `Blocked: dependency {X} / {Platform} not Built`.
+   - No Review handoff → `Blocked: run /ds-review first` (unless the user explicitly accepts planning on unverified foundations; then every foundation row is `Unknown`).
+2. **Standalone Single-Task Mode**:
+   - Read specifications directly from chat prompt, user requirements, or inspect live canvas variables / styles.
+   - Does not block on unbuilt dependencies: note any nested dependencies as planned instance swaps without halting.
+   - Unverified foundations are mapped to available file tokens or standard Profile defaults without blocking.
+3. Contract ID: from the Registry (`CC-{COMP}-{PLAT}-{NNN}`), or the existing ID when revising.
 
 ### 2. Write the contract sections
 

@@ -38,7 +38,13 @@ docs/          Review reports (historical)
 
 "Read-only" skills never change the component source, the foundations, or the docs. They may still write workflow state (the state store) and temporary sandbox instances (the `_DS Sandbox` page). Sandbox instances are deleted at the end of every run.
 
-High-risk skills (`/ds-foundation-generate`, `/ds-foundation-extend`, `/ds-build`, `/ds-fix`, `/ds-release`) set `disable-model-invocation: true`, so they run only when you call them by name. `/ds-run-workflow` stops at each of them and prints the command to type.
+### Dual Execution Modes (Workflow & Standalone)
+
+Every skill in the package operates in two modes:
+1. **Main Workflow Mode**: Chained and gated via `/ds-run-workflow` or `ds-delegate`. Strict lifecycle progression (`review → plan → approve → build → test → fix → document → release → handoff`), dependency order verification, and state store synchronization.
+2. **Standalone Single-Task Mode**: Direct, unblocked execution of any skill on an active component, canvas selection, or foundation set without requiring prior workflow steps or state store dependencies.
+
+High-risk mutating skills (`/ds-foundation-generate`, `/ds-foundation-extend`, `/ds-build`, `/ds-fix`, `/ds-release`) set `disable-model-invocation: true`, running only when explicitly invoked by name or confirmed by the user.
 
 ## Lifecycle
 

@@ -18,12 +18,13 @@ No source, foundation, or docs writes. **Sandbox writes** (temporary instances o
 
 - "Test {Component} / {Platform}. Scope: Build QA" — right after `/ds-build` or `/ds-fix`.
 - "Scope: Release QA" — after `/ds-document`.
+- Standalone single-task testing: "Audit/Test {Component} on canvas" or "Test selected frame" for contrast, bindings, typography, RTL, and states without requiring a prior workflow contract.
 - Re-testing after a fix cycle (fingerprints are reused).
 
 ## When not to use
 
 - Repairing findings → `/ds-fix`.
-- Readiness before any contract exists → `/ds-review`.
+- In Main Workflow: Readiness before any contract exists → `/ds-review`.
 - Whole-foundation health → `/ds-foundation-architecture-review`.
 - Runtime checks (ARIA, keyboard, screen readers) → code QA; this skill only marks them `Runtime verification required`.
 
@@ -31,7 +32,7 @@ No source, foundation, or docs writes. **Sandbox writes** (temporary instances o
 
 1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-test"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1–C4, C5 for scripts, C6 for sandbox instances, C7 for state). Record it.
-3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
+3. Open the state store ([workflow-state](../../standards/workflow-state.md)) when available.
 
 ## References
 
@@ -47,13 +48,14 @@ Skill files: [rule catalog](references/rules.md) · scripts: [helpers](../../scr
 |---|---|---|---|
 | **Build QA** (default) | Right after `/ds-build` or `/ds-fix` | All rules with Scope `Build` | `Tested` |
 | **Release QA** | After `/ds-document` | `Build` rules (re-check) + `Release` rules (DOC, A11Y-005/006/011/012, LNG-004) | `Documented` |
+| **Standalone Audit** | Single-task audit of any component or selection on canvas | All rules in scope (TOK, TXT, A11Y, DIR, STR) | Reports findings with severity and rule IDs directly |
 
 Docs are **not** part of Build QA. Missing docs never fail Build QA.
 
 ### 1. Read the inputs
 
-1. Read from the state store: Profile, contract record (Tables B–E), ledger (previous findings + fingerprints). State store wins over chat.
-2. Contract state must be `Built` or later (Build QA) / `Documented`-candidate (Release QA).
+1. **Main Workflow Mode**: Read from the state store: Profile, contract record (Tables B–E), ledger (previous findings + fingerprints). State store wins over chat. Contract state must be `Built` or later (Build QA) / `Documented`-candidate (Release QA).
+2. **Standalone Single-Task Mode**: Directly inspect the target component set or selected node on canvas. No prior contract record or ledger entry required. Evaluates against design system standards (variable bindings, typography metrics, Arabic rules, variant overlap, WCAG 2.2 / APCA contrast, RTL direction helper) and reports findings with rule IDs and severity.
 
 ### 2. Run the passes
 

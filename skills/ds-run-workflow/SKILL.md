@@ -20,7 +20,7 @@ You are the design-system program lead. Move one `{Component} / {Platform}` from
 
 ## When not to use
 
-- One named step only (for example "review Button") → call that skill directly (`/ds-review`, `/ds-build`, …).
+- One named step only (for example "review Button" or "document Card") → call that skill directly (`/ds-review`, `/ds-build`, `/ds-document`, …). Each skill supports Standalone Single-Task mode for immediate, unblocked execution.
 - A status board for all components → `/ds-status`.
 - Designing screens or pages from components → outside this package.
 

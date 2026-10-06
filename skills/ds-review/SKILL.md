@@ -23,6 +23,7 @@ Read-only: no source, foundation, or docs writes. State writes (ledger, registry
 ## When to use
 
 - "Review foundations for {Component} on {Web | Tablet | Mobile}."
+- Standalone readiness review: "Review {Component} / {Platform}" or audit token coverage for any component on canvas without requiring prior workflow setup.
 - Before the first `/ds-plan` for a target, or before a sibling platform (Delta review).
 - Checking parity across `{Component} / Web · Tablet · Mobile` (Consistency mode).
 
@@ -37,7 +38,7 @@ Read-only: no source, foundation, or docs writes. State writes (ledger, registry
 
 1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-review"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1–C4; C5 for scripts). Record in the header.
-3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
+3. Open the state store ([workflow-state](../../standards/workflow-state.md)) when available.
 
 ## References
 
@@ -52,6 +53,7 @@ Skill files: [worked example — Button / Web](references/worked-example.md) · 
 | Mode | Use when |
 |---|---|
 | **Component coverage** (default) | First review for a component + platform |
+| **Standalone audit** | Instant readiness check for any component or selection directly against file variables and styles without requiring prior workflow state |
 | **Delta review** | A review for this target (or a sibling) exists and the Profile version and foundation counts are unchanged. Re-check only new needs, previous gaps, and anything the ledger flags. If counts or the Profile changed → fall back to Component coverage |
 | **Consistency / family parity** | Several components or sibling platforms exist. Compare property names and values, state models, token roles, and docs status across `{Component} / Web · Tablet · Mobile` and across components. Differences without a `DEC-*` are findings |
 | **Foundation proposal pass** | Only write structured `FP-*` for gaps already found |

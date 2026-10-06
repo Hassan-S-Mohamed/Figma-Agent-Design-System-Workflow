@@ -19,19 +19,20 @@ Mutating (source writes; foundation writes only for approved `FP-*`; state write
 
 - "Fix the Critical and Major findings from the latest /ds-test on {Component} / {Platform}."
 - "Fix QA-BUTTON-WEB-004, QA-BUTTON-WEB-005."
+- Standalone single-task repair: "Fix {contrast / bindings / layout / RTL} on {Component} / selected frame" without prior workflow testing.
 - After `Confirm fix …` when the skill found the problems itself.
 
 ## When not to use
 
 - New features or API changes → `/ds-plan` (revision), then `/ds-build`.
-- Finding problems → `/ds-test`.
+- In Main Workflow: Finding problems → `/ds-test` (or run standalone inspection before repair).
 - Third fix cycle for the same contract version → stop; re-plan or accept with a `DEC-*`.
 
 ## Prerequisites
 
 1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-fix"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1–C8; C5 recommended); record it.
-3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the contract record, ledger (`Fix cycles`, findings, fingerprints), and Profile.
+3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the contract record, ledger (`Fix cycles`, findings, fingerprints), and Profile when available.
 
 ## References
 
@@ -43,6 +44,7 @@ Scripts: [helpers](../../scripts/figma/helpers.js) · [binding-audit](../../scri
 
 ### 1. Check the inputs and gates
 
+**Main Workflow Mode**:
 | Situation | Behavior |
 |---|---|
 | A `/ds-test` report (ledger or chat, same contract version) | Use its findings and fingerprints |
@@ -51,6 +53,13 @@ Scripts: [helpers](../../scripts/figma/helpers.js) · [binding-audit](../../scri
 | No contract in the state store | `Blocked: missing or incomplete component contract` (unless the user writes `emergency repair`, then log it) |
 | Contract `Blocked` | `Blocked: component contract is Blocked` |
 | Ledger shows `Fix cycles: 2` for this version | **Stop**. `Blocked: fix loop limit — re-plan or accept findings`. Recommend `/ds-plan` (revision) or a `DEC-*` to accept |
+
+**Standalone Single-Task Mode**:
+When invoked standalone for a single repair task:
+1. Inspects the target component set or selected node on canvas.
+2. Identifies defects (or takes user-targeted issues: bindings, Auto Layout, contrast, Arabic line height, direction helper).
+3. Lists proposed minimal repairs and asks for confirmation: `Confirm fix ...`.
+4. Saves checkpoint and applies safe minimal repairs directly without requiring prior ledger test records.
 
 Default scope: Critical + Major. Moderate/Minor only when asked or inseparable.
 

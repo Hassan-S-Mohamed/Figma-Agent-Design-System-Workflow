@@ -18,13 +18,14 @@ Mutating (source writes; foundation writes only for approved Table C rows; state
 ## When to use
 
 - "Build {Component} / {Platform} from the approved contract."
+- Standalone single-task build: "Build {Component} / {Platform}" from prompt specifications, selection, or an inline contract without prior workflow state.
 - A new minor contract version was approved (Non-breaking update).
 - A major version and `Approve MIG-…` exist (Migration).
 - A build stopped midway and the ledger has a checkpoint (Resume).
 
 ## When not to use
 
-- No approved contract → `/ds-plan`, then the human approval.
+- In Main Workflow: No approved contract → `/ds-plan`, then the human approval (or use Standalone mode with user confirmation).
 - Fixing findings from QA → `/ds-fix`.
 - Creating foundations on their own → `/ds-foundation-extend`.
 - Screens, pages, or layouts made from components → outside this package.
@@ -33,7 +34,7 @@ Mutating (source writes; foundation writes only for approved Table C rows; state
 
 1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-build"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`). If `figma-use` suggests `figma-generate-library`, use it only for Plugin API technique; this skill's contract and gates decide what is built.
 2. Capability check (C1–C8; C5 recommended); record it.
-3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the contract record, ledger, and Profile.
+3. Open the state store ([workflow-state](../../standards/workflow-state.md)) and read the contract record, ledger, and Profile when available.
 
 ## References
 
@@ -50,14 +51,16 @@ Skill files: [worked example — Button / Web](references/worked-example.md)
 | Mode | Scope | Extra gate |
 |---|---|---|
 | **New** (default) | Create the set | — |
+| **Standalone** | Build a component directly as an isolated single task from prompt specs, selection, or inline contract | User confirms proposed spec / variants |
 | **Non-breaking update** | Additive change from a minor contract version | Approval of the new version |
 | **Migration** | Breaking change from a major version | `Approve MIG-…` + affected instance list |
 | **Resume** | Continue an interrupted build | Ledger shows `Last phase` + checkpoint for the same contract version, and the user types `Proceed {CC-ID} v{x}` after the stored approval is echoed |
 
 ### Hard gate (Phase 0)
 
-Mutate nothing until all are true. Stop with **one** block reason otherwise.
+Mutate nothing until gates pass. Stop with **one** block reason in Main Workflow mode.
 
+**Main Workflow Mode**:
 | # | Check | Block reason |
 |---|---|---|
 | 1 | Capability C1–C8 available (C5 recommended); MCP has `figma-use` loaded, or runtime is Figma's in-app agent | `Blocked: write tools unavailable` |
@@ -71,6 +74,14 @@ Mutate nothing until all are true. Stop with **one** block reason otherwise.
 | 9 | Migration mode has `Approve MIG-…` | `Blocked: migration approval required` |
 
 Quote the approval like this in the report: `Approval: "Approve CC-BUTTON-WEB-001 v1.0 Ready to Build. Also approve FP-SYS-001"`.
+
+**Standalone Single-Task Mode**:
+When invoked standalone for a single build task:
+1. Capabilities C1–C8 verified (or native tools in Figma in-app).
+2. Intake contract or specification directly from chat prompt, inline Table B, or canvas selection.
+3. Confirmation gate: prompt the user to confirm the component name, variants, and platform (e.g. `Confirm build of {Component} / {Platform} with {N} variants`), or proceed if already confirmed in prompt.
+4. Dependencies: if required nested dependencies (Table D) are not built, use local frames or placeholder instance swaps instead of blocking.
+5. Save checkpoint and execute construction sequence safely.
 
 ### Safety: checkpoint, node IDs, resume, rollback
 

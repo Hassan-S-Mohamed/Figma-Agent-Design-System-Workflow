@@ -17,12 +17,13 @@ Docs writes only (+ state writes for the docs style record and ledger). Never ed
 ## When to use
 
 - "Document {Component} / {Platform}." after Build QA passed (contract `Tested`).
+- Standalone single-task documentation: "Document {Component} on canvas" or "Create docs for selected component" without requiring prior test workflow state.
 - "Mode: Foundations. Document the {Color | Typography | Spacing | Elevation} foundations."
 - Updating a docs page after a new contract version.
 
 ## When not to use
 
-- Contract not yet `Tested` → `/ds-test` (Build QA) first.
+- In Main Workflow: Contract not yet `Tested` → `/ds-test` (Build QA) first (or use Standalone Component mode if documenting an existing canvas component directly).
 - Defects found while documenting → record them and recommend `/ds-fix`.
 - Token export and code prop mapping for developers → `/ds-handoff`.
 
@@ -30,7 +31,7 @@ Docs writes only (+ state writes for the docs style record and ledger). Never ed
 
 1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-document"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1, C3, C4, C6, C7, C8); record it. Save a checkpoint before the first docs write ([figma-tooling](../../standards/figma-tooling.md) §3).
-3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
+3. Open the state store ([workflow-state](../../standards/workflow-state.md)) when available.
 
 ## References
 
@@ -43,11 +44,14 @@ Docs writes only (+ state writes for the docs style record and ledger). Never ed
 | Mode | Gate | Placement |
 |---|---|---|
 | **Component** (default) | Contract state `Tested` or later (Build QA passed). Earlier → `Blocked: run /ds-test (Build QA) first` | `Docs / Components / {Component} / {Platform}` (or the file's convention) |
+| **Standalone Component** | Component exists on canvas | `Docs / Components / {Component} / {Platform}` (or active page) |
 | **Foundations** | Profile present | `Docs / Foundations / {Set}` |
 
 ### 1. Intake
 
-1. Read Profile, contract record, ledger, latest test report (same version). State store wins over chat.
+1. **Intake context**:
+   - **Main Workflow Mode**: Read Profile, contract record, ledger, latest test report (same version). State store wins over chat. Contract state must be `Tested` or later.
+   - **Standalone Single-Task Mode**: Directly inspect the target component set or selected node on canvas (variants, properties, styles, direction). Does not require `Tested` contract state.
 2. **Docs template** — read the docs style record (`docs-style.md`, or `_DS Docs Style` in-file). If a template is recorded, reuse it and say so. If not, **stop and ask**:
 
    ```text

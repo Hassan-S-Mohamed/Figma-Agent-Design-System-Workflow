@@ -21,10 +21,12 @@ Read-only in Figma. Outputs are files in the workspace (when allowed) or text in
 ## When to use
 
 - "Handoff {Component} / {Platform}. Outputs: tokens, props, runtime." after release (or after Build QA).
+- Standalone single-task handoff: "Handoff {Component} / {Platform}" or "Export tokens and props for {Component} / selection" without requiring prior test workflow state.
 - Exporting the component's tokens in DTCG format for Style Dictionary.
 
 ## When not to use
 
+- In Main Workflow: Component not tested yet → `/ds-test` first (or use Standalone Handoff mode to inspect canvas component directly).
 - Design-side docs pages → `/ds-document`.
 - Writing or generating production component code → outside this package.
 - Publishing Code Connect mappings → Figma's Code Connect tooling (this skill only prepares the mapping table).
@@ -33,7 +35,7 @@ Read-only in Figma. Outputs are files in the workspace (when allowed) or text in
 
 1. Follow [figma-tooling](../../standards/figma-tooling.md) §5 for this runtime: on MCP, invoke `figma-use` before every `use_figma` call and pass `skillNames: "figma-use,ds-handoff"`; inside Figma's in-app agent, do not stop for a missing `figma-use` install — use native canvas tools, follow §5b, and use in-file state (`_DS System`).
 2. Capability check (C1, C3, C4; C5 for `resolveVariable`); record it.
-3. Open the state store ([workflow-state](../../standards/workflow-state.md)).
+3. Open the state store ([workflow-state](../../standards/workflow-state.md)) when available.
 
 ## References
 
@@ -45,7 +47,8 @@ Scripts: [helpers](../../scripts/figma/helpers.js) (`resolveVariable`, `variable
 
 ### 1. Check the gate
 
-Read the contract record and Profile from the state store. Contract state must be `Tested` or later (prefer `Released`). Earlier → `Blocked: component not tested`. Foundations-only handoff needs a Profile.
+- **Main Workflow Mode**: Read the contract record and Profile from the state store. Contract state must be `Tested` or later (prefer `Released`). Earlier → `Blocked: component not tested`. Foundations-only handoff needs a Profile.
+- **Standalone Single-Task Mode**: Directly inspect the target component set or selected node on canvas and read its bound variables/styles. Exports DTCG 2025.10 tokens, Code Connect prop mappings, APG runtime notes, and contrast evidence directly without requiring pre-existing workflow state.
 
 ### 2. Produce the outputs
 
