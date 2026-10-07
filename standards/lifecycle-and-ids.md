@@ -22,6 +22,12 @@ Any state ──► Blocked (with one block reason) ──► back to the state 
 | `Deprecated` | `/ds-release` (deprecation mode) | Replaced; kept for consumers until removal |
 | `Blocked` | Any skill | Cannot continue; one primary block reason recorded |
 
+### Standard Block Reasons
+- `Blocked: foundations missing — run /ds-foundation first`
+- `Blocked: component not found — run /ds-component first`
+- `Blocked: no test findings — run /ds-test first`
+- `Blocked: component untested — run /ds-test first`
+
 No other status words are allowed for contracts. Docs pages and test results have their own small label sets (see the owning skill), but they never replace the contract state.
 
 ## 2. Contract versioning

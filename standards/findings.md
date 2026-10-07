@@ -44,7 +44,7 @@ Every repeatable check has a rule ID so results can be compared across runs. Fam
 | `DOC` | Documentation |
 | `CON` | Contract drift |
 
-The full rule list lives in `skills/ds-test/references/rules.md`. Review, Build self-check and Fix revalidation use the same IDs.
+The full rule list lives in `skills/ds-test/SKILL.md`. Review, Build self-check and Fix revalidation use the same IDs.
 
 ## 3. Finding fingerprint
 

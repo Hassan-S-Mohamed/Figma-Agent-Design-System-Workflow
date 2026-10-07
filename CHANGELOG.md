@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.0.0 — 2026-10-07
+
+### Complete Architecture Restructure for Figma Agent
+
+Restructures the entire repository to focus exclusively on **Figma Agent** custom skills in Figma Design and Figma Make (following https://help.figma.com/hc/en-us/articles/40283639496599-Create-and-manage-custom-skills-in-Figma).
+
+- Consolidated the legacy skills into **6 dedicated Figma Agent skills**:
+  - `ds-orchestrator`: Master workflow manager and coordinator across the 5 downstream skills with phase gates and status tracking in Figma.
+  - `ds-foundation`: Generates Variables and Styles, establishes Primitive and Semantic token tiers, enforces explicit variable descriptions and strict scoping (`TEXT_FILL`, `FRAME_FILL`, `STROKE_COLOR`, `GAP`, `CORNER_RADIUS`), and queries user via chat when clarification is needed.
+  - `ds-component`: Plans and implements components across Web, Tablet, and Mobile, creating a dedicated component-variables tier based on semantic tokens.
+  - `ds-test`: Systematic QA compliance checking for 100% token binding, scoping, UI principles, WCAG 2.2 / APCA accessibility, and RTL stress.
+  - `ds-fix`: Automated remediation of test report findings.
+  - `ds-documentation`: Full production canvas documentation faithfully matching the Blade DSL reference template (Anatomy, Props, Tokens, Variations, Do's & Don'ts, Platform, A11y, Motion) and mandatory one-line append to `.Changelog`.
+- Streamlined install bundles for direct upload to Figma Agent.
+
 ## 2.2.0 — 2026-10-03
 
 Resolves all 25 findings of Gap Review v2 (IDs `R1`–`R7`, `I1`–`I6`, `S1`–`S6`, `P1`–`P4`). The package is now MIT-licensed.

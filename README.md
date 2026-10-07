@@ -1,152 +1,210 @@
 # Figma Agent Design System Workflow
 
-**Version 2.2.0** · [CHANGELOG](CHANGELOG.md) · MIT licence
+**Version 3.0.0** · [CHANGELOG](CHANGELOG.md) · MIT license
 
-A package of agent skills that walks an AI agent through building and maintaining a production design system in a live Figma file. Skills follow the [Agent Skills](https://agentskills.io/specification) format and Figma's [skill guide](https://developers.figma.com/docs/figma-mcp-server/create-skills/). It covers foundations (Variables and Styles), then one component on one platform at a time. Every step has human approval gates, durable workflow state, measured accessibility (WCAG 2.2 + APCA), and real English + Arabic / LTR + RTL support.
+A specialized suite of custom skills designed natively for **[Figma Agent](https://help.figma.com/hc/en-us/articles/40283639496599-Create-and-manage-custom-skills-in-Figma)** (in Figma Design and Figma Make). This workflow guides the Figma Agent through building, maintaining, verifying, and documenting an enterprise design system directly inside your Figma files.
 
-## What's inside
+Every step features strict token abstraction (Primitive → Semantic → Component tokens), automated compliance checks (100% token binding, variable scoping), measured accessibility (WCAG 2.2 AA + APCA), bidirectional LTR/RTL support, canvas documentation based on the Blade DSL reference template, and automated `.Changelog` tracking.
+
+---
+
+## The 6 Core Figma Agent Skills
 
 ```text
-skills/        15 skills, each skills/<name>/SKILL.md (+ references/ when long)
-standards/     Shared rules every skill links to (one source of truth)
-catalog/       Component tiers, build-order graph, per-component checklist
-scripts/       Figma Plugin API helpers + pure JS libs (contrast, grid) + tests + bundler + validator + eval checker
-evals/         Prompts and golden assertions to check the skills still behave (one positive case per skill)
-docs/          Review reports (historical)
-.github/       CI: tests, bundle, validate, eval check on every push; bundles attached to tagged releases
+[1. Orchestration]     /ds-orchestrator     Stage management, progress tracking & phase gates
+        │
+        ▼
+[2. Foundations]       /ds-foundation       Variables & Styles, Light/Dark modes, strict scopes & descriptions
+        │
+        ▼
+[3. Components]        /ds-component        Component-level variables, Web / Tablet / Mobile sets & variants
+        │
+        ▼
+[4. Compliance QA]     /ds-test             100% token binding, Auto Layout, WCAG 2.2 contrast, touch targets
+        │
+        ├───────────────────────────────────┐
+        ▼ (if findings detected)            ▼ (if test passes)
+[5. Remediation]       /ds-fix (Optional)   │
+        │                                   │
+        └───────────────────┬───────────────┘
+                            ▼
+[6. Documentation]     /ds-documentation    Canvas docs (Blade DSL template) + .Changelog 1-line append
 ```
 
-## Skills
-
-| Command | Job | Writes |
+| Skill Command | Primary Role & Responsibility | Output in Figma |
 |---|---|---|
-| `/ds-run-workflow` | Orchestrates everything below, with gates and resume; prints the exact command for the five user-started skills | via called skills |
-| `/ds-status` | Board of every component × platform from the ledger | none |
-| `/ds-adopt` | Bring an existing file/components under the workflow | state |
-| `/ds-foundation-generate` | Create Variables + Styles from an open-system structure + brand | foundations |
-| `/ds-foundation-architecture-review` | Foundation health; Post-generate check; Profile draft | state |
-| `/ds-foundation-extend` | Execute approved `FP-*` proposals and `FPV-*` token value changes | foundations |
-| `/ds-review` | Component coverage readiness + Plan handoff | state |
-| `/ds-plan` | Versioned Component Contract (`CC-*`) with Tables B–E | state |
-| `/ds-build` | Build the component set from the approved contract | source |
-| `/ds-test` | Build QA / Release QA with stable rule IDs | state, sandbox |
-| `/ds-fix` | Repair findings (max 2 cycles) | source |
-| `/ds-document` | Docs page (or foundations docs) with live instances | docs |
-| `/ds-release` | Release notes, version, deprecation — after a human publishes | docs, state |
-| `/ds-handoff` | DTCG token export, prop → code mapping, APG runtime notes | none |
-| `/ds-jira` | Board package (draft; create only after `Create in Jira`) | none |
+| **`/ds-orchestrator`** | Manages the end-to-end workflow, tracks project stage in Figma, enforces phase gates, and directs the user on who does what and what slash command to run next. | Workflow status board (`_DS System`) |
+| **`/ds-foundation`** | Plans and implements design system foundations (Variables & Styles) based on requested structure. Sets up Primitive and Semantic token layers, enforces explicit variable descriptions and strict scoping (`TEXT_FILL`, `FRAME_FILL`, `STROKE_COLOR`, `GAP`, `CORNER_RADIUS`). Asks user via chat whenever clarification is required. | Variable collections, Modes, Text & Effect Styles |
+| **`/ds-component`** | Plans and implements components for all platforms (Web, Tablet, Mobile). Establishes a dedicated **component-variables tier** based on semantic variables, and binds all component layers to these component-level tokens. Builds full variant states, slots, and responsive Auto Layout. | Multi-platform Component Sets |
+| **`/ds-test`** | Quality assurance and compliance auditor. Verifies 100% token binding (zero raw hex or unlinked values), variable scoping compliance, component-variable mapping, UI principles, WCAG 2.2 AA / APCA contrast, touch targets (≥44px), and RTL/Arabic stress. Outputs structured Findings Report. | Test Findings Report (chat & canvas sticker) |
+| **`/ds-fix`** *(optional)* | Automatically repairs findings and violations from the `/ds-test` report. Binds unlinked properties to component tokens, corrects Auto Layout constraints, fixes contrast pairs, and expands touch targets. | Fixed component nodes |
+| **`/ds-documentation`** | Constructs visual canvas documentation faithfully following the **Blade DSL Reference Template** (Anatomy Light/Dark, Props/Tokens tables, Variations, 5 Do's & Don'ts cards, Platform guidelines, Accessibility, Motion guidelines) and appends a mandatory one-line log into the Figma file's `".Changelog"` report. | Canvas documentation frames + `.Changelog` append |
 
-"Read-only" skills never change the component source, the foundations, or the docs. They may still write workflow state (the state store) and temporary sandbox instances (the `_DS Sandbox` page). Sandbox instances are deleted at the end of every run.
+---
 
-### Dual Execution Modes (Workflow & Standalone)
+## Detailed Skill Specifications
 
-Every skill in the package operates in two modes:
-1. **Main Workflow Mode**: Chained and gated via `/ds-run-workflow` or `ds-delegate`. Strict lifecycle progression (`review → plan → approve → build → test → fix → document → release → handoff`), dependency order verification, and state store synchronization.
-2. **Standalone Single-Task Mode**: Direct, unblocked execution of any skill on an active component, canvas selection, or foundation set without requiring prior workflow steps or state store dependencies.
+### 1. `/ds-orchestrator`
+- **Controller of the pipeline**: Maintains awareness across all 5 downstream skills.
+- **Workflow State**: Keeps a clean status registry on a canvas frame (`_DS System / Workflow Board`) tracking `{Component} / {Platform}`, lifecycle state (`Foundation → Component → Tested → Fixed → Documented → Released`), and open findings.
+- **Phase Gates**:
+  - *Gate 1 (Foundations)*: Semantic tokens verified with scopes and descriptions before component work starts.
+  - *Gate 2 (Component)*: Component set and component tokens verified before testing.
+  - *Gate 3 (QA)*: Findings addressed via `/ds-fix` or acknowledged before documentation.
+  - *Gate 4 (Release)*: Canvas docs complete and `.Changelog` updated.
+- **Interactive Prompts**: Concludes every interaction with the exact next command for the user to copy or run.
 
-High-risk mutating skills (`/ds-foundation-generate`, `/ds-foundation-extend`, `/ds-build`, `/ds-fix`, `/ds-release`) set `disable-model-invocation: true`, running only when explicitly invoked by name or confirmed by the user.
+### 2. `/ds-foundation`
+- **Two-Tier Architecture**:
+  - `_Primitives` (Hidden from publishing): Color scales (50–900), base spacing (0–64), base radius (0–full).
+  - `Semantic Tokens` (Published): `color/surface/*`, `color/text/*`, `color/icon/*`, `color/border/*`, `color/interactive/*`, `color/feedback/*`, `spacing/*`, `radius/*`.
+  - Modes: `Light` and `Dark` (plus high contrast or density where requested).
+- **Mandatory Descriptions**: Every variable and style MUST have an informative description: `[Purpose] | Usage: [Where to apply] | Pairing: [Paired contrast token]`.
+- **Strict Scoping (`scopes`)**:
+  - Text colors: `TEXT_FILL` only.
+  - Surface colors: `FRAME_FILL`, `SHAPE_FILL`.
+  - Border colors: `STROKE_COLOR`.
+  - Spacing: `GAP`, `WIDTH_HEIGHT`.
+  - Corner radius: `CORNER_RADIUS`.
+  - Stroke width: `STROKE_FLOAT`.
+- **Chat Clarification Protocol**: If the agent cannot recognize brand colors, typography font families, or token conventions from context, **it stops and asks the user via chat** before proceeding. Never guesses arbitrary values.
 
-## Lifecycle
+### 3. `/ds-component`
+- **Component-Variables Tier (Tier 3 Tokens)**:
+  - Establishes dedicated component-level variables: `component/{name}/{part}/{property}/{state}` (e.g. `component/accordion/header/bg/default`).
+  - Aliases every component variable to a semantic foundation token (never raw hex).
+  - Binds all visual layers, strokes, paddings, and radii to these component tokens.
+- **Multi-Platform Support**:
+  - **Web**: Responsive breakpoints (Large, Medium, Small), hover feedback, 2px visible focus rings.
+  - **Tablet**: Touch ergonomics, minimum touch target 44 × 44 pt.
+  - **Mobile**: Native app conventions, minimum touch target 44 × 44 pt (iOS) / 48 × 48 px (Android), compact stacks.
+- **Component Anatomy & Auto Layout**:
+  - Subcomponents (e.g. `Accordion Item / Leading Item`, `Accordion Item / Content Slot`).
+  - Variants: State (`Default`, `Hover`, `Focus`, `Active`, `Disabled`), Size (`Small`, `Medium`, `Large`), Booleans (leading/trailing visual toggles), Instance Swap (slots).
+  - Dynamic resizing: `Fill container` for wrapping text, `Hug contents` for compact items. Never fixed width on text containers.
+  - Bidirectional LTR/RTL support with adequate line-height for Arabic text expansion.
+
+### 4. `/ds-test`
+- **Automated Quality & Compliance Audit**:
+  - `TOK`: Zero hardcoded hex colors, zero unlinked font styles, zero raw spacing/radius numbers.
+  - `SCP`: Variable scoping verification (no text color used on frame fills).
+  - `CMP`: Component-level tokens properly aliased to semantic foundations.
+  - `UI`: Auto Layout completeness, dynamic reflow without clipping, state completeness.
+  - `A11Y`: WCAG 2.2 AA contrast (≥ 4.5:1 text, ≥ 3:1 non-text UI) & APCA (|Lc| ≥ 75 text, ≥ 60 UI), visible 2px focus ring, touch targets (≥ 44px).
+  - `LNG` / `DIR`: Arabic font vertical metrics (no clipped glyphs) and RTL layout mirroring.
+- **Test Findings Report**: Outputs structured findings with IDs (`TOK-001`, `A11Y-002`, `UI-003`), severity (`CRITICAL`, `WARNING`, `INFO`), and remediation instructions.
+
+### 5. `/ds-fix` (Optional)
+- **Automated Remediation**:
+  - Reads findings from `/ds-test`.
+  - Binds raw hex values to appropriate component variables.
+  - Re-aliases contrast tokens along approved token ramps to satisfy WCAG 2.2 AA.
+  - Adjusts Auto Layout properties (fixed to Hug/Fill, corrects padding).
+  - Expands touch target padding on Mobile/Tablet to reach 44px minimum.
+  - Re-verifies fixed nodes and confirms resolution.
+
+### 6. `/ds-documentation`
+- **Figma Canvas Documentation Layout (Blade DSL Reference Template)**:
+  1. **Header & Intro**: Breadcrumb (`{System Name} / Documentation`), Title (`Introduction — {Component}`), Summary paragraph, Light & Dark visual anatomy callouts with pointers (`leading visual`, `title`, `trailing icon`, `content`, `slot`).
+  2. **Props & Tokens Tables**: Props `[{Component}]` table, Props `[{Subcomponent}]` table(s), and Tokens mapping table (Property → State/Condition → Token Name).
+  3. **Variations**: Side-by-side showcase of variants (e.g. `leading = None`, `Number`, `Icon`) with labels.
+  4. **Usage Guidelines (Do's & Don'ts)**: 5 visual comparison cards with green "Do" and red "Don't" badges (When to use, Active state limit, Item volume, Title line limits for Desktop vs Mobile, Text wrapping).
+  5. **Platform Guidelines**: Desktop, Tablet, and Mobile specification cards (min/max widths, lines) + device mockup frames.
+  6. **Accessibility**: Use case, text scaling, color contrast minimums, keyboard navigation (`Space/Enter`, `Arrows`, `Cmd+F`), screen reader labeling.
+  7. **Motion Guidelines**: Matrix of States (Initial/Final), Animation, Triggers (Hover, Click, System Trigger), Timeline (ms), and Transition Properties (duration & easing tokens, property changes).
+  8. **Live Component Set & Subcomponents**: Rendered component sets with purple dashed bounding boxes and variant dimension tags.
+- **Mandatory One-Line Changelog Log**:
+  - Finds or creates the `".Changelog"` report frame in the Figma file.
+  - Appends a single one-line entry:
+    `[YYYY-MM-DD] [vX.X] [{Component} / {Platform}] - {Summary of creation/update} (Figma Agent)`
+  - Confirms the changelog update in chat.
+
+---
+
+## Installation into Figma Agent
+
+According to [Figma's custom skills guide](https://help.figma.com/hc/en-us/articles/40283639496599-Create-and-manage-custom-skills-in-Figma), custom skills in Figma Agent are uploaded as **single, standalone Markdown (`.md`) files**:
+
+1. Build or locate the standalone skill files in `dist/single/`:
+   - `dist/single/ds-orchestrator.md`
+   - `dist/single/ds-foundation.md`
+   - `dist/single/ds-component.md`
+   - `dist/single/ds-test.md`
+   - `dist/single/ds-fix.md`
+   - `dist/single/ds-documentation.md`
+2. Open **Figma Design** or **Figma Make**.
+3. Open the agent chat sidebar.
+4. Click `+` (Add context) in the prompt box → **Skills** → **Add skill** → **Upload a file**.
+5. Select and upload each skill file.
+6. The skills are now active and ready to be invoked using slash commands:
+   - `/ds-orchestrator`
+   - `/ds-foundation`
+   - `/ds-component`
+   - `/ds-test`
+   - `/ds-fix`
+   - `/ds-documentation`
+
+---
+
+## Example Workflow Walkthrough
 
 ```text
-Draft → Ready to Build → Approved → Built → Tested → Documented → Released   (+ Deprecated, Blocked)
+User:
+/ds-orchestrator Start workflow for Accordion component.
+
+Agent:
+Inspecting file... Foundations are present (142 semantic tokens).
+Next step: Plan and implement the Accordion component across Web, Tablet, and Mobile.
+Run: /ds-component Build Accordion for Web, Tablet, and Mobile
+
+User:
+/ds-component Build Accordion for Web, Tablet, and Mobile
+
+Agent:
+- Created component-variables collection: component/accordion/*
+- Built subcomponents: Accordion Item / Leading Item, Accordion / Accordion Item
+- Built main component set: Accordion / Web, Accordion / Tablet, Accordion / Mobile
+- Bound all fills, strokes, padding, and radii to component tokens
+Next step: Run /ds-test to audit token compliance and accessibility
+
+User:
+/ds-test Audit Accordion / Web
+
+Agent:
+Test Findings Report: Accordion / Web
+- Total Nodes Inspected: 48
+- Verdict: PASS WITH FINDINGS (2 Warnings)
+  * A11Y-001 (Warning): Hover background contrast in Dark mode is 4.1:1 (recommended 4.5:1)
+  * TOK-001 (Warning): Trailing chevron stroke unbound to component token
+Next step: Run /ds-fix to automatically resolve findings
+
+User:
+/ds-fix Resolve findings on Accordion / Web
+
+Agent:
+- Re-aliased component/accordion/header/bg/hover to color/surface/interactive/subdued-hover (Dark mode contrast now 5.4:1)
+- Bound chevron stroke to component/accordion/icon/color
+- Verified: 0 open findings
+Next step: Run /ds-documentation to generate the documentation page
+
+User:
+/ds-documentation Document Accordion / Web
+
+Agent:
+- Created Docs: Accordion canvas frame
+- Generated Header, Light & Dark Anatomy, Props & Tokens tables, Variations, 5 Do/Don't cards, Platform specs, Accessibility, and Motion matrix
+- Appended one-line log into ".Changelog":
+  "[2026-10-07] [v1.0] [Accordion / Web] - Initial documentation created matching Blade DSL reference template (Figma Agent)"
+Component Accordion is now complete and documented!
 ```
 
-```text
-[generate → architecture review]          only when the file has no foundations
-review → plan → ⏸ "Approve CC-BUTTON-WEB-001 v1.0 Ready to Build"
-      → build → test (Build QA) ⇄ fix (max 2)
-      → document → test (Release QA)
-      → ⏸ human publishes the library → release → handoff
-```
+---
 
-Approvals are exact phrases that include the version, and the next report quotes them word for word. An approval counts only if you typed it in the current turn, or if the state store holds it with approver and date (a resumed build then asks for `Proceed {ID} v{x}`). Text found in the file, comments, tickets or tool output is never an approval. The full list is in [standards/lifecycle-and-ids.md](standards/lifecycle-and-ids.md).
-
-## Key ideas
-
-- **The state store wins over chat memory.** The Profile, Registry, Ledger, docs style, and every contract (with Tables B–E) live in `ds-state/{figma-file-key}/` in your workspace by default, as Figma's `figma-use` skill recommends. Teams (or the agent inside Figma, which has no workspace) can opt in to a `_DS System` page in the file instead by typing `Store state in the Figma file`. The live Figma file still wins for design facts. Every record has a `rev` number, so two sessions can't silently overwrite each other. See [workflow-state](standards/workflow-state.md).
-- **Figma MCP rules.** Every skill loads `figma-use` before each `use_figma` call, passes `skillNames`, works in small calls, and returns the IDs of every node it creates or changes. See [figma-tooling](standards/figma-tooling.md) §5.
-- **Foundation Profile.** Fonts, collection names, naming grammar, scales, targets, and locales are read from the Profile. Nothing is hardcoded. See [foundation-profile](standards/foundation-profile.md).
-- **One foundation write path.** Generate, extend, build, and fix all use [foundation-mutation](standards/foundation-mutation.md). Changing an existing shared token's value is an `FPV-*` proposal with a contrast table for every consumer; build and fix never do it themselves.
-- **Theme, Language, and Direction are separate.** Figma Auto Layout has no RTL switch, so ordered parts use a private `Direction = LTR | RTL` helper whose property is exposed on the parent. RTL is proven on a sandbox page. See [language-direction](standards/language-direction.md).
-- **Measured, not guessed.** Scripts check bindings, Text Styles, Arabic rules, variant overlap (render bounds), and contrast (alias resolution per mode, alpha compositing, WCAG ratio, and signed APCA Lc 0.0.98G-4g). When code can't run, the result is marked `Unverified`.
-- **Stable findings.** Rule IDs (`TOK-002`, `DIR-001`, …) and fingerprints let a retest show exactly what changed. See [findings](standards/findings.md) and the [rule catalog](skills/ds-test/references/rules.md).
-- **Build order.** Tier 0 primitives (Icon, Spinner, Divider, Tooltip, Icon Button, Menu) come before Tier 1 components. Build is blocked while a required dependency isn't built yet. See [catalog](catalog/components.md).
-
-## Platforms
-
-`{Component} / Web`, `{Component} / Tablet` (app), and `{Component} / Mobile` (app) are separate sets. Web viewports are called **Large / Medium / Small** and are driven by variable modes, never by variants. After Web is approved, Tablet and Mobile can be planned as **Sibling delta** contracts.
-
-## Install
-
-Download the bundles from a tagged GitHub release (CI attaches them), or build and check them yourself:
+## Developer Validation & Scripts
 
 ```bash
-node scripts/bundle-skills.mjs
-node scripts/validate-skills.mjs
+node --test scripts/test/*.test.mjs     # Run unit tests
+node scripts/bundle-skills.mjs          # Build install bundles into dist/
+node scripts/validate-skills.mjs        # Validate skills against Agent Skills spec
+node scripts/check-evals.mjs            # Verify eval cases and package consistency
 ```
-
-The bundler writes three editions. The run fails if a link is broken or two files would get the same name; the validator fails if a single-file edition is over 100 KB or a slim edition is over 32 KB.
-
-- `dist/skills/<skill>/` — the Agent Skills layout: `SKILL.md`, a flat `references/` folder (standards, catalog, worked examples), and a `scripts/` folder (Figma Plugin API scripts). `SKILL.md` ends with a "Bundled files" list, so every file is one link away.
-- `dist/single/<skill>.md` — one Markdown file with all references appended and **no scripts** (about 55–90 KB). Checks that need a script are done by hand and marked `Unverified`.
-- `dist/slim/<skill>.md` — one Markdown file with the skill's instructions and only the **core rules** (approvals, untrusted content, severity, state revisions, Figma MCP rules, contrast thresholds), about 13–26 KB. Built from the `<!-- core -->` sections of the standards, so nothing is copied by hand.
-
-| Runtime | Install |
-|---|---|
-| **Cursor** | Copy `dist/skills/*` into `.cursor/skills/` (project) or `~/.cursor/skills/` (user) |
-| **Claude Code, Codex, other Agent Skills runtimes** | Copy `dist/skills/*` into the runtime's skills folder |
-| **Figma's in-app agent (custom skills)** | Upload `dist/slim/<skill>.md` (smallest context) or `dist/single/<skill>.md` (full detail). One Markdown file per skill — Figma custom skills do not support `scripts/` or `references/` folders. State goes in the file (`_DS System`) because there is no workspace. **Do not upload Figma's MCP `figma-use` skill** — the in-app agent uses native canvas tools; these skills detect that runtime and continue. |
-| **Working on this repo** | Use `skills/` directly. Links resolve relative to the repo |
-
-### Install into Figma's in-app agent
-
-1. Build bundles: `node scripts/bundle-skills.mjs`
-2. In Figma Design, open the agent chat → click in the prompt box → **Skills** → **Add skill** → **Upload a file**
-3. Upload each file from `dist/slim/` (recommended) or `dist/single/` (fuller detail, larger). Start with the skills you need (for example `ds-document.md`, `ds-status.md`, `ds-run-workflow.md`)
-4. In the first prompt of a new file, type `Store state in the Figma file` so the agent uses `_DS System`
-5. Invoke with `/ds-document`, `/ds-run-workflow`, etc.
-
-Requirements: either (a) the [Figma MCP server](https://developers.figma.com/docs/figma-mcp-server/) with `use_figma` and Figma's `figma-use` skill (Cursor / Claude Code / Codex), or (b) Figma's in-app agent with these custom skills uploaded. Running the package audit scripts needs Plugin API JavaScript (`use_figma` or equivalent); slim/single uploads mark script-backed checks `Unverified` when scripts cannot run. Every skill runs a capability check first and reports what it could not do. `/ds-jira` needs no Figma access; its Create mode needs a Jira tool.
-
-## Example prompts
-
-```text
-/ds-foundation-generate
-Generate Variables and Styles for Acme. Structure: Primer. Brand primary: #0B5FFF.
-Typefaces: Inter (EN), IBM Plex Sans Arabic (AR). Themes: Light, Dark.
-```
-
-```text
-Approve FG-ACME-PRIMER-001 v1 Ready to Generate
-```
-
-```text
-/ds-run-workflow
-Run the full workflow for Button on Web.
-```
-
-```text
-Approve CC-BUTTON-WEB-001 v1.0 Ready to Build. Also approve FP-SYS-001
-```
-
-```text
-/ds-status
-```
-
-## Development
-
-```bash
-node --test scripts/test/*.test.mjs     # pure libs + mocked Figma scripts
-node scripts/bundle-skills.mjs          # bundle; exits 1 on broken links or name collisions
-node scripts/validate-skills.mjs        # Agent Skills spec + Figma skill guide checks, bundle sizes, repo paths
-node scripts/check-evals.mjs            # eval block reasons match the skills; one case per skill; one version
-```
-
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs all four on every push and pull request. Pushing a tag `v*` also attaches `dist/` as zip files to the GitHub release.
-
-Evals: [evals/README.md](evals/README.md).
-
-## License
-
-MIT — see [LICENSE](LICENSE).
